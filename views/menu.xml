@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_examen" name="Examen"  />
+
+    <record id="exam_session_action" model="ir.actions.act_window">
+        <field name="name">Sessions</field>
+        <field name="res_model">examen.session</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_exam_session" name="Sessions" parent="menu_examen" sequence="1"
+        action="exam_session_action" />
+
+    <record id="exam_inscription_action" model="ir.actions.act_window">
+        <field name="name">Inscriptions</field>
+        <field name="res_model">examen.inscription</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_inscription_session" name="Inscriptions" parent="menu_examen" sequence="1"
+        action="exam_inscription_action" />
+
+</odoo>

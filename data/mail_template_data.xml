@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <data >
+        <!--Email template noupdate="0"-->
+        <record id="email_template_edi_invoice_exam_buy" model="mail.template">
+            <field name="name">Facture: Envoi (Achat d'examen)</field>
+            <field name="model_id" ref="exam_polylangue.model_account_move"/>
+            <field name="email_from">{{ (object.invoice_user_id.email_formatted or object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="subject">{{ object.company_id.name }} Invoice (Ref {{ object.name or 'n/a' }})</field>
+            <field name="description">Envoyé aux clients avec leurs factures en pièce jointe</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;">
+                        Cher
+                        <t t-if="object.partner_id.parent_id">
+                            <t t-out="object.partner_id.name or ''">Brandon Freeman</t> (<t t-out="object.partner_id.parent_id.name or ''">Azure Interior</t>),
+                        </t>
+                        <t t-else="">
+                            <t t-out="object.partner_id.name or ''">Brandon Freeman</t>,
+                        </t>
+                        <br/><br/>
+                        Veuillez trouver ci-joint votre
+                        <t t-if="object.name">
+                            facture <span style="font-weight:bold;" t-out="object.name or ''">INV/2021/05/0005</span>
+                        </t>
+                        <t t-else="">
+                            facture
+                        </t>
+                        <t t-if="object.invoice_origin">
+                            (avec référence : <t t-out="object.invoice_origin or ''">SUB003</t>)
+                        </t>
+                        d'un montant de <span style="font-weight:bold;" t-out="format_amount(object.amount_total, object.currency_id) or ''">$ 143,750.00</span>
+                        pour l'inscription de  <t t-out="object.invoice_line_ids[-1].quantity or ''">5</t> candidat(s) a l'examen  <t t-out="object.invoice_line_ids[-1].product_id.name or ''">Exam1</t>..<br/>
+                        <!-- de <t t-out="object.company_id.name or ''">YourCompany</t>. -->
+                        <t t-if="object.payment_state in ('paid', 'in_payment')">
+                            Cette facture est déjà payé.</t><t t-else="">
+                            Veuillez procéder au paiement dans les meilleurs délais.
+                        </t>
+
+                    </p>
+
+                    <div t-if="object.payment_state not in ('paid', 'in_payment')">
+                        <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;"><br/></p>
+                        <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;"><a t-att-href="object.generate_payment_link()" target="_blank" style="display: inline-block; padding: 10px 20px; text-decoration: none; color: white; background-color: #007bff; border: none; border-radius: 5px; cursor: pointer;" class="btn btn-primary btn-lg">Payer Maintenant</a><br/></p>
+                        <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;"><br/></p>
+                    </div>.<br/>.<br/>
+
+                    <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;">N'hésitez pas à nous contacter si vous avez des questions.
+                        <t t-if="not is_html_empty(object.invoice_user_id.signature)"><br/><br/>
+                            <t t-out="object.invoice_user_id.signature or ''">--<br/>Mitchell Admin</t>
+                        </t>
+                    </p>
+                    <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;"><br/></p>
+                </div>
+            </field>
+            <field name="report_template" ref="account.account_invoices"/>
+            <field name="report_name">Invoices_{{ (object.name or '').replace('/','_') }}{{ object.state == 'draft' and '_draft' or '' }}</field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+    
+    </data>
+    
+
+</odoo>

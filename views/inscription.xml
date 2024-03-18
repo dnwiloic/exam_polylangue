@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="exam_inscription_view_form" model="ir.ui.view">
+        <field name="name">exam_inscription.view.form</field>
+        <field name="model">examen.inscription</field>
+        <field name="arch" type="xml">
+            <form string="">
+                <header>
+                    <button name="action_cancel" string="Anuler"
+                                type="object" groups="exam_polylangue.exam_group_user" data-hotkey="v"
+                                attrs="{'invisible': [('state', 'in', ['cancel','paid'])]}"/>
+                     <button name="action_confirm" string="Confirmer" class="oe_highlight"
+                                type="object" groups="exam_polylangue.exam_group_user" data-hotkey="v"
+                                attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirm,paid"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_invoice"
+                            type="object"
+                            class="oe_stat_button"
+                            groups="account.group_account_invoice"
+                            icon="fa-pencil-square-o"
+                            attrs="{'invisible': [('invoice_id', '=', None)]}">
+                            Facture
+                            <!-- <field name="invoice_count" widget="statinfo" string="Invoices"/> -->
+                        </button>
+                    </div>
+                    <!-- <label for="session"/> -->
+                    <group >
+                        <field name="session_id" options="{'no_create': True, 'no_update': True}"
+                                attrs="{'readonly': [('state', '!=', 'draft')]}" />
+                        <field name="branch_id"/>
+                   </group>
+                    <group name="participants" string="Participants">
+                            
+                            <field name="participant_edof" domain="[('status','=','INTRAINING'), ('branch_id','=',branch_id)]" 
+                                    options="{'no_create': True, 'no_update': True}"
+                                    attrs="{'readonly': [('state', '!=', 'draft')]}" >
+                                <tree>
+                                    <field name="attendee_last_name" />
+                                    <field name="attendee_first_name" />
+                                    <field name="status" />
+                                    <field name="folder_number" />
+                                </tree>
+                            </field>
+
+                            <field name="participant_hors_cpf" domain="[('status','=','intraining'),('branch_id','=',branch_id)]" 
+                                    options="{'no_create': True, 'no_update': True}" 
+                                    attrs="{'readonly': [('state', '!=', 'draft')]}"
+                                    context="{'tree_view_ref' : 'dossier_list_reduct_view'}" >
+                                <tree>
+                                    <field name="last_name" />
+                                    <field name="first_name" />
+                                    <field name="status" />
+                                    <field name="number" />
+                                </tree>
+                               
+                            </field>
+
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="examen_inscription_view_tree" model="ir.ui.view">
+        <field name="name">examen.inscription.view.tree</field>
+        <field name="model">examen.inscription</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="session_id" />
+                <field name="branch_id" />
+            </tree>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,54 @@
+<odoo>
+    <data noupdate="1">
+        <record id="exam_group_user" model="res.groups">
+            <field name="name">Examen / Gestion des Inscriptions</field>
+            <field name="implied_ids"
+                eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <record id="exam_group_manager" model="res.groups">
+            <field name="name">Examen / Gestion des Sessions</field>
+            <field name="implied_ids"
+                eval="[(4, ref('base.group_user'))]"/>
+            <field name="users"
+                eval="[(4, ref('base.user_root')),
+                    (4, ref('base.user_admin'))]"/> 
+        </record>
+
+        <record id="inscription_user_rule" model="ir.rule">
+            <field name="name">Exam inscription user access</field>
+            <field name="model_id" ref="model_examen_inscription"/>
+            <field name="domain_force">
+                [('branch_id', 'in', user.branch_ids.ids)]
+            </field>
+            <field name="groups" eval="[(4,
+            ref('exam_group_user'))]"/>
+        </record>
+
+         <record id="inscription_admin_rule" model="ir.rule">
+            <field name="name">Exam inscription admin access</field>
+            <field name="model_id" ref="model_examen_inscription"/>
+            <field name="domain_force"></field>
+            <field name="groups" eval="[(4,
+            ref('base.user_admin'))]"/>
+        </record>
+
+        <record id="session_user_rule" model="ir.rule">
+            <field name="name">Exam session user access</field>
+            <field name="model_id" ref="model_examen_session"/>
+            <field name="domain_force">
+                [('branch_id', 'in', user.branch_ids.ids)]
+            </field>
+            <field name="groups" eval="[(4,
+            ref('exam_group_user'))]"/>
+        </record>
+
+        <record id="session_admin_rule" model="ir.rule">
+            <field name="name">Exam session admin access</field>
+            <field name="model_id" ref="model_examen_session"/>
+            <field name="domain_force"></field>
+            <field name="groups" eval="[(4,
+            ref('base.user_admin'))]"/>
+        </record>
+    </data>
+</odoo>
