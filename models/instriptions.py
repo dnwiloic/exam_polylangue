@@ -15,13 +15,21 @@ class inscription(models.Model):
     session_id = fields.Many2one("examen.session", required=True)
     participant_edof = fields.Many2many("edof.registration.folder", relation='inscription_participant_hors_cpf_rel')
     participant_hors_cpf = fields.Many2many("gestion.formation.dossier", relation='inscription_participant_edof_rel')
-    branch_id = fields.Many2one("res.branch", string="Agence",required=True, readonly=False, default=lambda self:self.env.user.branch_id)
+    branch_id = fields.Many2one("res.branch", string="Agence",required=True, readonly=True, compute="_compute_branch", store=True)
     state = fields.Selection(selection=STATE, compute="_compute_state", string='Etat', default='draft', store=True)
     invoice_id = fields.Many2one('account.move', required=False)
 
     def _compute_nbr_insciption(self):
         self.ensure_one()
         return len(self.participant_edof) + len(self.participant_hors_cpf)
+
+    @api.depends('session_id')
+    def _compute_branch(self):
+        for record in self:
+            if record.session_id:
+                record.branch_id = record.session_id.branch_id
+            else :
+                record.branch_id = None
 
     @api.constrains('participant_edof', 'participant_hors_cpf')
     def _check_participant_limits(self):

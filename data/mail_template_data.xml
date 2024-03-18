@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <data >
+    <data noupdate="1" >
         <!--Email template noupdate="0"-->
         <record id="email_template_edi_invoice_exam_buy" model="mail.template">
             <field name="name">Facture: Envoi (Achat d'examen)</field>
