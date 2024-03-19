@@ -77,9 +77,9 @@ class inscription(models.Model):
             if insc._check_participant_limits() and insc.branch_id and insc.branch_id.company_id:
                 
                 if not insc.invoice_id:
-                    journal = self.env['account.journal'].sudo().search([('name','=',"Achat d'examen"), ('company_id','=',insc.branch_id.company_id.id)])
+                    journal = self.env['account.journal'].search([('name','=',"Achat d'examen"), ('company_id','=',insc.branch_id.company_id.id)])
                     if not journal:
-                        journal = self.env['account.journal'].sudo().create({
+                        journal = self.env['account.journal'].create({
                             'name': "Achat d'examen",
                             'code': "ACH_EXM",
                             'type': "sale",
@@ -87,7 +87,7 @@ class inscription(models.Model):
                         })
                     
                     invoice_data = {
-                        'partner_id': insc.branch_id.company_id.id, 
+                        'partner_id': insc.branch_id.company_id.partner_id.id, 
                         'branch_id': insc.branch_id.id,
                         'move_type': 'out_invoice',
                         'invoice_date':fields.Date.today(),
