@@ -10,13 +10,14 @@
 
                     <group >
                         <group>
-                            <field name="name" />
-                            <field name="min_cand" />
-                            <field name="max_cand" />
-                            <field name="branch_id" domain="[('company_id.is_edof_franchise','=',True)]" />
+                            <field name="inscription_ids" invisible="1"/>
+                            <field name="name"  />
+                            <field name="min_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
+                            <field name="max_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
+                            <field name="branch_id" attrs="{'readonly': [('inscription_ids', '!=', [])]}" domain="[('company_id.is_edof_franchise','=',True)]" />
                         </group>
                         <group>
-                            <field name="date" />
+                            <field name="date" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
                             <field name="time" widget="float_time" />
                             <field name="examinateur" />
                             <field name="examen_id" />

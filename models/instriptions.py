@@ -15,39 +15,41 @@ class inscription(models.Model):
     session_id = fields.Many2one("examen.session", required=True)
     participant_edof = fields.Many2many("edof.registration.folder", relation='inscription_participant_hors_cpf_rel')
     participant_hors_cpf = fields.Many2many("gestion.formation.dossier", relation='inscription_participant_edof_rel')
-    branch_id = fields.Many2one("res.branch", string="Agence",required=True, readonly=True, compute="_compute_branch", store=True)
+    branch_id = fields.Many2one("res.branch", string="Agence", compute="_compute_branch", store=True)
     state = fields.Selection(selection=STATE, compute="_compute_state", string='Etat', default='draft', store=True)
-    invoice_id = fields.Many2one('account.move', required=False)
+    invoice_id = fields.Many2one('account.move', required=False, default=None)
 
     def _compute_nbr_insciption(self):
         self.ensure_one()
         return len(self.participant_edof) + len(self.participant_hors_cpf)
+    
+    def get_nbr_inscription_to_session(self):
+        self.ensure_one()
+        return self.session_id.get_nbr_inscription()
 
     @api.depends('session_id')
     def _compute_branch(self):
         for record in self:
             if record.session_id:
                 record.branch_id = record.session_id.branch_id
-            else :
+            else:
                 record.branch_id = None
+            
 
     @api.constrains('participant_edof', 'participant_hors_cpf')
     def _check_participant_limits(self):
         for record in self:
             min = record.session_id.min_cand
             max = record.session_id.max_cand
-            nbr_cand = record._compute_nbr_insciption()
+            nbr_cand = record.get_nbr_inscription_to_session()
+            if record._compute_nbr_insciption() <= 0:
+                raise models.ValidationError(f"Une inscription doit contenir au moins 1 candidat(e)")
             if nbr_cand > max:
                 raise models.ValidationError(f"Vous devez inscrire au maximun {max} candidat(s) a cette session")
             if nbr_cand < min:
                 raise models.ValidationError(f"Vous devez inscrire au minimum {min} candidat(s) a cette session")
+            
         return True
-                
-    @api.depends('user_id')
-    def _compute_user_brach(self):
-        for record in self:
-            if record.user_id and record.user_id.branch_id:
-                record.branch_id = record.user_id.branch_id
 
     @api.depends('invoice_id.payment_state')
     def _compute_state(self):
@@ -91,9 +93,11 @@ class inscription(models.Model):
                         'invoice_date':fields.Date.today(),
                         'journal_id': journal.id
                     }
-                    insc.invoice_id = self.env['account.move'].sudo().create(invoice_data)
 
-                self.env['account.move.line'].sudo().create({
+                    
+                    insc.invoice_id = self.env['account.move'].create(invoice_data)
+
+                self.env['account.move.line'].create({
                         'move_id': insc.invoice_id.id,
                         'product_id': insc.session_id.examen_id.id,
                         'name': insc._compute_invoice_description(),
@@ -125,6 +129,9 @@ class inscription(models.Model):
     def action_cancel(self):
         for insc in self:
             insc.state='cancel'
+            if insc.invoice_id:
+                insc.invoice_id.button_cancel()
+                insc.invoice_id.unlink()
 
     def action_view_invoice(self):
         self.ensure_one()

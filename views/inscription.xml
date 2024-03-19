@@ -23,7 +23,7 @@
                             class="oe_stat_button"
                             groups="account.group_account_invoice"
                             icon="fa-pencil-square-o"
-                            attrs="{'invisible': [('invoice_id', '=', None)]}">
+                            attrs="{'invisible':  [('state', 'not in', ['paid','confirm'])]}">
                             Facture
                             <!-- <field name="invoice_count" widget="statinfo" string="Invoices"/> -->
                         </button>
@@ -32,7 +32,7 @@
                     <group >
                         <field name="session_id" options="{'no_create': True, 'no_update': True}"
                                 attrs="{'readonly': [('state', '!=', 'draft')]}" />
-                        <field name="branch_id"/>
+                        <field name="branch_id" readonly="1"/>
                    </group>
                     <group name="participants" string="Participants">
                             
@@ -50,7 +50,7 @@
                             <field name="participant_hors_cpf" domain="[('status','=','intraining'),('branch_id','=',branch_id)]" 
                                     options="{'no_create': True, 'no_update': True}" 
                                     attrs="{'readonly': [('state', '!=', 'draft')]}"
-                                    context="{'tree_view_ref' : 'dossier_list_reduct_view'}" >
+                                    context="{'tree_view_ref' : 'exam__polylangue.dossier_list_reduct_view'}" >
                                 <tree>
                                     <field name="last_name" />
                                     <field name="first_name" />
