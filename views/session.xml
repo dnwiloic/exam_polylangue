@@ -6,21 +6,29 @@
         <field name="model">examen.session</field>
         <field name="arch" type="xml">
             <form string="">
+                <header>
+                    <field name="status" widget="statusbar" statusbar_visible="open,close"/>
+                </header>
                 <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" attrs="{'invisible':[('name', '=', ''), ('posted_before', '=', False), ('quick_edit_mode', '=', False)]}" readonly="1" placeholder="Draft"/>
 
+                            <!-- <span attrs="{'invisible': ['|', '|', '|', ('status', '!=', 'draft'), ('name', '!=', '/'), ('posted_before', '=', True), ('quick_edit_mode', '=', True)]}">Nouvelle session</span> -->
+                        </h1>
+                    </div>
                     <group >
                         <group>
                             <field name="inscription_ids" invisible="1"/>
-                            <field name="name"  />
-                            <field name="min_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
-                            <field name="max_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
+                            <field name="date" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
+                            <field name="time" widget="float_time" />
+                            <field name="examen_id" />
                             <field name="branch_id" attrs="{'readonly': [('inscription_ids', '!=', [])]}" domain="[('company_id.is_edof_franchise','=',True)]" />
                         </group>
                         <group>
-                            <field name="date" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
-                            <field name="time" widget="float_time" />
                             <field name="examinateur" />
-                            <field name="examen_id" />
+                            <field name="min_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
+                            <field name="max_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
                         </group>
                     </group>
                     
@@ -37,6 +45,7 @@
                 <field name="name" /> 
                 <field name="branch_id" />
                 <field name="date" />
+                <field name="status" />
             </tree>
         </field>
     </record>

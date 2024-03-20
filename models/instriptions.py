@@ -5,7 +5,7 @@ class inscription(models.Model):
     _name = 'examen.inscription'
     _description = "Inscriptions aux examens"
 
-    STATE = [
+    STATUS = [
         ('draft', 'Brouillon'),
         ('confirm', 'Confirmé'),
         ('paid', 'Payé'),
@@ -16,7 +16,7 @@ class inscription(models.Model):
     participant_edof = fields.Many2many("edof.registration.folder", relation='inscription_participant_hors_cpf_rel')
     participant_hors_cpf = fields.Many2many("gestion.formation.dossier", relation='inscription_participant_edof_rel')
     branch_id = fields.Many2one("res.branch", string="Agence", compute="_compute_branch", store=True)
-    state = fields.Selection(selection=STATE, compute="_compute_state", string='Etat', default='draft', store=True)
+    status = fields.Selection(selection=STATUS, compute="_compute_status", string='Etat', default='draft', store=True)
     invoice_id = fields.Many2one('account.move', required=False, default=None)
 
     def _compute_nbr_insciption(self):
@@ -45,17 +45,17 @@ class inscription(models.Model):
             if record._compute_nbr_insciption() <= 0:
                 raise models.ValidationError(f"Une inscription doit contenir au moins 1 candidat(e)")
             if nbr_cand > max:
-                raise models.ValidationError(f"Vous devez inscrire au maximun {max} candidat(s) a cette session")
+                raise models.ValidationError(f"Vous devez inscrire au maximun {max} candidat(s) a cette session. \n Il reste {max - (nbr_cand - record._compute_nbr_insciption()) } place(s) ")
             if nbr_cand < min:
                 raise models.ValidationError(f"Vous devez inscrire au minimum {min} candidat(s) a cette session")
             
         return True
 
     @api.depends('invoice_id.payment_state')
-    def _compute_state(self):
+    def _compute_status(self):
         for record in self:
             if record.invoice_id and record.invoice_id.payment_state == 'paid':
-                record.state = 'paid'
+                record.status = 'paid'
                 for person in record.participant_edof:
                     person.sudo().write({
                         'exam_date': record.session_id.date,
@@ -77,15 +77,14 @@ class inscription(models.Model):
             if insc._check_participant_limits() and insc.branch_id and insc.branch_id.company_id:
                 
                 if not insc.invoice_id:
-                    journal = self.env['account.journal'].search([('name','=',"Achat d'examen"), ('company_id','=',insc.branch_id.company_id.id)])
+                    journal = self.env['account.journal'].search([('code','=',"INS_E"), ('type','=','sale'), ('company_id','=',self.env.company.id)])
                     if not journal:
                         journal = self.env['account.journal'].create({
-                            'name': "Achat d'examen",
-                            'code': "ACH_EXM",
+                            'name': "Inscription examen",
+                            'code': "INS_E",
                             'type': "sale",
-                            'company_id': insc.branch_id.company_id.id
+                            'company_id': self.env.company.id
                         })
-                    
                     invoice_data = {
                         'partner_id': insc.branch_id.company_id.partner_id.id, 
                         'branch_id': insc.branch_id.id,
@@ -124,11 +123,11 @@ class inscription(models.Model):
                 # invoice_send_wizard.sudo().send_and_print_action()
 
                 if(insc.invoice_id):
-                    insc.state='confirm'
+                    insc.status='confirm'
 
     def action_cancel(self):
         for insc in self:
-            insc.state='cancel'
+            insc.status='cancel'
             if insc.invoice_id:
                 insc.invoice_id.button_cancel()
                 insc.invoice_id.unlink()
@@ -149,9 +148,9 @@ class inscription(models.Model):
 
     def _compute_invoice_description(self):
         self.ensure_one()
-        description = ""
+        description = f"{self.session_id.examen_id.name}"
         if len(self.participant_edof) > 0:
-            description = "   --- EDOF ---"
+            description = f"{description} \n  --- EDOF ---"
             for person in self.participant_edof:
                 description = f"""{description}
                 {person.attendee_last_name} {person.attendee_first_name} {person.folder_number}"""   

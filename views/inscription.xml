@@ -9,12 +9,12 @@
                 <header>
                     <button name="action_cancel" string="Anuler"
                                 type="object" groups="exam_polylangue.exam_group_user" data-hotkey="v"
-                                attrs="{'invisible': [('state', 'in', ['cancel','paid'])]}"/>
+                                attrs="{'invisible': [('status', 'in', ['cancel','paid'])]}"/>
                      <button name="action_confirm" string="Confirmer" class="oe_highlight"
                                 type="object" groups="exam_polylangue.exam_group_user" data-hotkey="v"
-                                attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                                attrs="{'invisible': [('status', '!=', 'draft')]}"/>
 
-                    <field name="state" widget="statusbar" statusbar_visible="draft,confirm,paid"/>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,confirm,paid"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -23,7 +23,7 @@
                             class="oe_stat_button"
                             groups="account.group_account_invoice"
                             icon="fa-pencil-square-o"
-                            attrs="{'invisible':  [('state', 'not in', ['paid','confirm'])]}">
+                            attrs="{'invisible':  [('status', 'not in', ['paid','confirm'])]}">
                             Facture
                             <!-- <field name="invoice_count" widget="statinfo" string="Invoices"/> -->
                         </button>
@@ -31,14 +31,15 @@
                     <!-- <label for="session"/> -->
                     <group >
                         <field name="session_id" options="{'no_create': True, 'no_update': True}"
-                                attrs="{'readonly': [('state', '!=', 'draft')]}" />
+                                attrs="{'readonly': [('status', '!=', 'draft')]}" 
+                                domain="[('status','=','open')]"/>
                         <field name="branch_id" readonly="1"/>
                    </group>
                     <group name="participants" string="Participants">
                             
                             <field name="participant_edof" domain="[('status','=','INTRAINING'), ('branch_id','=',branch_id)]" 
                                     options="{'no_create': True, 'no_update': True}"
-                                    attrs="{'readonly': [('state', '!=', 'draft')]}" >
+                                    attrs="{'readonly': [('status', '!=', 'draft')]}" >
                                 <tree>
                                     <field name="attendee_last_name" />
                                     <field name="attendee_first_name" />
@@ -49,7 +50,7 @@
 
                             <field name="participant_hors_cpf" domain="[('status','=','intraining'),('branch_id','=',branch_id)]" 
                                     options="{'no_create': True, 'no_update': True}" 
-                                    attrs="{'readonly': [('state', '!=', 'draft')]}"
+                                    attrs="{'readonly': [('status', '!=', 'draft')]}"
                                     context="{'tree_view_ref' : 'exam__polylangue.dossier_list_reduct_view'}" >
                                 <tree>
                                     <field name="last_name" />
@@ -73,6 +74,7 @@
             <tree>
                 <field name="session_id" />
                 <field name="branch_id" />
+                <field name="status" />
             </tree>
         </field>
     </record>
