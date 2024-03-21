@@ -46,6 +46,7 @@
                 <field name="branch_id" />
                 <field name="date" />
                 <field name="status" />
+                <field name="nbr_cand" />
             </tree>
         </field>
     </record>

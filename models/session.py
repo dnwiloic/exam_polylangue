@@ -8,7 +8,7 @@ class Session(models.Model):
 
     SESSION_STATES = [
         ('open','Ouvert'),
-        ('close','Fermé')
+        ('close','Complet')
     ]
 
     name = fields.Char("Libelé")
@@ -21,7 +21,8 @@ class Session(models.Model):
     examen_id = fields.Many2one("product.product",required=True)
     inscription_ids = fields.One2many(comodel_name='examen.inscription', inverse_name='session_id', default=False)
     have_insc = fields.Boolean(compute="_compute_have_insc", store=True)
-    status = fields.Selection(SESSION_STATES, default="open", store=True, compute="_compute_status")
+    status = fields.Selection(SESSION_STATES, default="open", store=True, compute="_compute_nbr_inscription")
+    nbr_cand = fields.Integer("Nombre d'inscriptions", compute="_compute_nbr_inscription", store=True, default=0)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -43,17 +44,35 @@ class Session(models.Model):
                 if record.date < future_date:
                     raise models.ValidationError("La date doit être au moins 3 semaines dans le futur.")
                 
+    @api.onchange('date','branch_id','examen_id')
+    def _on_session_attr_change(self):
+        if self.date and self.branch_id and self.branch_id:
+            other_session = self.env['examen.session'].sudo().search([('date','=',self.date),('branch_id','=',self.branch_id.id),('examen_id','=',self.examen_id.id)])
+            if other_session:
+                raise models.ValidationError(f"Une session d'examen de '{self.examen_id.name}' a déjà été programmé à '{self.branch_id.name}' en date du '{self.date}' ")
+
     @api.depends('inscription_ids')
     def _compute_status(self):
         for rec in self:
             if rec.get_nbr_inscription() == rec.max_cand:
                 rec.status = 'close'
 
+    @api.depends('inscription_ids','inscription_ids.status', 'inscription_ids.participant_edof', 'inscription_ids.participant_hors_cpf')
+    def _compute_nbr_inscription(self):
+        for rec in self:
+            rec.nbr_cand = rec.get_nbr_inscription()
+            if rec.nbr_cand >= rec.max_cand:
+                rec.status = 'close'
+            else:
+                rec.status = 'open'
+
+
     def get_nbr_inscription(self):
         self.ensure_one()
         nbr_edof = 0
         nbr_cpf = 0
-        for elt in self.inscription_ids:
+        inscription_ids = self.env['examen.inscription'].sudo().search([('session_id','=',self.id),('status','!=','cancel')])
+        for elt in inscription_ids:
             nbr_edof = nbr_edof + len(elt.participant_edof)
             nbr_cpf = nbr_cpf + len(elt.participant_hors_cpf)
 
