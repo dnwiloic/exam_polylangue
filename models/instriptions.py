@@ -1,4 +1,5 @@
-from odoo import fields, models, api
+from odoo import fields, models, api, _
+from datetime import datetime
 
 
 class inscription(models.Model):
@@ -12,12 +13,23 @@ class inscription(models.Model):
         ('cancel', 'Annulé')
     ]
 
+    PAYMENT_STATE_SELECTION = [
+        ('not_paid', 'Non payé'),
+        ('in_payment', 'En cour de  Paiement'),
+        ('paid', 'Payé'),
+        ('partial', 'Partielement payé'),
+        ('reversed', 'Reversé'),
+        ('invoicing_legacy', "Héritage de l'application de facturation"),
+]
+
     session_id = fields.Many2one("examen.session", required=True)
     participant_edof = fields.Many2many("edof.registration.folder", relation='inscription_participant_hors_cpf_rel')
     participant_hors_cpf = fields.Many2many("gestion.formation.dossier", relation='inscription_participant_edof_rel')
     branch_id = fields.Many2one("res.branch", string="Agence", compute="_compute_branch", store=True)
     status = fields.Selection(selection=STATUS, compute="_compute_status", string='Etat', default='draft', store=True)
+    # status_payment = fields.Selection(selection=STATUS, compute="_compute_status", string='Etat', default='draft', store=True)
     invoice_id = fields.Many2one('account.move', required=False, default=None)
+    status_paiment = fields.Selection(PAYMENT_STATE_SELECTION,readonly=True, compute="_compute_payment_state", store=True, default="not_paid")       
 
     def _compute_nbr_insciption(self):
         self.ensure_one()
@@ -56,76 +68,152 @@ class inscription(models.Model):
         for record in self:
             if record.invoice_id and record.invoice_id.payment_state == 'paid':
                 record.status = 'paid'
+
                 for person in record.participant_edof:
+                    print(f"=========={record.session_id}")
+                    print(f"=========={person}")
                     person.sudo().write({
                         'exam_date': record.session_id.date,
                         'time': record.session_id.time,
-                        'exam_center_id': record.session_id.branch_id.id,
-                        'status': 'EXAM_SCHEDULED'
+                        'exam_center_id': record.branch_id.id,
+                        'status': 'EXAM_TO_CONFIRM',
+                        'exam_session_id': record.session_id.id
                     })
+
                 for person in record.participant_hors_cpf:
                     person.sudo().write({
                         'exam_date': record.session_id.date,
                         'time': record.session_id.time,
-                        'exam_center_id': record.session_id.branch_id.id,
-                        'status': 'exam_scheduled'
+                        'exam_center_id': record.branch_id.id,
+                        'status': 'exam_to_confirm',
+                        'exam_session_id': record.session_id.id
                     })
 
+               
+
+
+    def _get_default_journal(self):
+        self.ensure_one()
+        journal = self.env['account.journal'].search([('code','=',"INS_E"), ('type','=','sale'), ('company_id','=',self.env.company.id)])
+        if not journal:
+            journal = self.env['account.journal'].create({
+                'name': "Inscription examen",
+                'code': "INS_E",
+                'type': "sale",
+                'company_id': self.env.company.id
+            })
+
+        return journal
+    
+    def _get_penality_product(self):
+        self.ensure_one()
+        date_difference = self.session_id.date - datetime.today().date()
+        days_difference = date_difference.days
+        penality_product = self.env['product.product'].sudo().search([
+            ('is_pass','=',True),
+             ('penality_limit','>=',days_difference) ], order="penality_limit asc", limit=1)
+        
+        return penality_product
+
+
+    def _compute_invoice(self):
+        self.ensure_one()
+        if not self.invoice_id:
+            invoice_data = {
+                'partner_id': self.branch_id.company_id.partner_id.id, 
+                'branch_id': self.branch_id.id,
+                'move_type': 'out_invoice',
+                'invoice_date':fields.Date.today(),
+                'journal_id': self._get_default_journal().id
+            }
+            try :
+                self.invoice_id = self.env['account.move'].create(invoice_data)
+            except Exception as e:
+                simalars_partner = self.env['res.partner'].sudo().search([
+                    ('name','=',self.branch_id.company_id.partner_id.name),
+                    ('id','!=',self.branch_id.company_id.partner_id.id),
+                    ('is_company','=',True)])
+                for partner in simalars_partner:
+                    invoice_data['partner_id'] = partner.id
+                    try :
+                        self.invoice_id = self.env['account.move'].create(invoice_data)
+                        break
+                    except :
+                        pass
+                    raise e
+        else :
+            for line in self.invoice_id.line_ids:
+                line.unlink()    
+
+        # create new product line
+        self.env['account.move.line'].create({
+                'move_id': self.invoice_id.id,
+                'product_id': self.session_id.examen_id.id,
+                'name': self._compute_invoice_description(),
+                'quantity': self._compute_nbr_insciption(), 
+                # 'account_id': insc.session_id.examen_id.account_id.id, 
+            }
+        )
+
+        # check and add penality
+        pass_product = self._get_penality_product()
+        if pass_product :
+            self.env['account.move.line'].create({
+                'move_id': self.invoice_id.id,
+                'product_id': pass_product.id,
+                'name': f"Pénalité pour une inscription éffectué durant les {pass_product.penality_limit} jours précédant la date de l'examen",
+                'quantity': self._compute_nbr_insciption(), 
+                # 'account_id': insc.session_id.examen_id.account_id.id, 
+            })
+
+       
+
+    def _post_invoice(self):
+        self.ensure_one()
+        if not self.invoice_id:
+            raise models.UserError(_('Aucune facture sur cet inscription'))
+        self.invoice_id.sudo().action_post()
+        action = self.invoice_id.with_context(discard_logo_check=True).sudo().action_invoice_sent()
+        action_context = action['context']
+
+        self.invoice_id.with_context(**action_context).message_post_with_template(action_context.get('default_template_id'))
+
+
+    def button_confirm(self, confirm=False):
+        self.ensure_one()
+        if self._check_participant_limits() and self.branch_id and self.branch_id.company_id:
+            self._compute_invoice()
+            message = ""
+            for line in self.invoice_id.line_ids:
+                if line.product_id.is_pass:
+                    message = f"""En raison d'une inscription tardive a cette session d'examen, une pénalité de {line.product_id.list_price} {self.invoice_id.currency_id.name} par candidats sera facturé
+                    Voulez-vous vraiment continuer ?"""
+            # if confirm:
+            return self.action_confirm() 
+            # return {
+            #     'type': 'ir.actions.act_window',
+            #     'res_model': 'ir.actions.act_window',
+            #     'name': _('Confirmation'),
+            #     'view_mode': 'form',
+            #     'target': 'new',
+            #     'context': {
+            #         'default_name': _(message),
+            #         'default_type': 'ir.actions.act_window',
+            #         'default_res_model': 'votre.model',
+            #         'default_res_id': self.id,
+            #         'default_method': 'action_confirm',
+            #     }
+            # }
 
     def action_confirm(self):
         for insc in self:
-            if insc._check_participant_limits() and insc.branch_id and insc.branch_id.company_id:
+            if not insc.invoice_id:
+                return False
+            insc._post_invoice()
+            insc.status='confirm'
                 
-                if not insc.invoice_id:
-                    journal = self.env['account.journal'].search([('code','=',"INS_E"), ('type','=','sale'), ('company_id','=',self.env.company.id)])
-                    if not journal:
-                        journal = self.env['account.journal'].create({
-                            'name': "Inscription examen",
-                            'code': "INS_E",
-                            'type': "sale",
-                            'company_id': self.env.company.id
-                        })
-                    invoice_data = {
-                        'partner_id': insc.branch_id.company_id.partner_id.id, 
-                        'branch_id': insc.branch_id.id,
-                        'move_type': 'out_invoice',
-                        'invoice_date':fields.Date.today(),
-                        'journal_id': journal.id
-                    }
 
-                    
-                    insc.invoice_id = self.env['account.move'].create(invoice_data)
-
-                self.env['account.move.line'].create({
-                        'move_id': insc.invoice_id.id,
-                        'product_id': insc.session_id.examen_id.id,
-                        'name': insc._compute_invoice_description(),
-                        'quantity': insc._compute_nbr_insciption(), 
-                        # 'account_id': insc.session_id.examen_id.account_id.id, 
-                    }
-                )
-
-                # confirm and send email
-                insc.invoice_id.sudo().action_post()
-                action = insc.invoice_id.with_context(discard_logo_check=True).sudo().action_invoice_sent()
-                action_context = action['context']
-
-                insc.invoice_id.with_context(**action_context).message_post_with_template(action_context.get('default_template_id'))
-                # template = self.env.ref(insc.invoice_id._get_mail_template())
-                # invoice_send_wizard = self.env['account.invoice.send'].with_context(
-                #     action_context,
-                #     active_ids=[insc.invoice_id.id] 
-                # ).sudo().create({'is_print': False, 'template_id': template})
-                # print("==================================================================================")
-                # print(action_context.get('default_template_id'))
-                # print("==================================================================================")
-                # # send the invoice
-                # invoice_send_wizard.sudo().send_and_print_action()
-
-                if(insc.invoice_id):
-                    insc.status='confirm'
-
-    def action_cancel(self):
+    def button_cancel(self):
         for insc in self:
             insc.status='cancel'
             if insc.invoice_id:
@@ -163,3 +251,7 @@ class inscription(models.Model):
 
         return description
     
+    @api.depends('invoice_id.payment_state')
+    def _compute_payment_state(self):
+        for record in self:
+            record.status_paiment = record.invoice_id.payment_state

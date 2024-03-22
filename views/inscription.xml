@@ -7,10 +7,11 @@
         <field name="arch" type="xml">
             <form string="">
                 <header>
-                    <button name="action_cancel" string="Anuler"
+                    <button name="button_cancel" string="Annuler"
+                                confirm='Cette action est ireversible a {branch_id}. Voulez-vous vraiment annuler cette inscription ?'
                                 type="object" groups="exam_polylangue.exam_group_user" data-hotkey="v"
                                 attrs="{'invisible': [('status', 'in', ['cancel','paid'])]}"/>
-                     <button name="action_confirm" string="Confirmer" class="oe_highlight"
+                     <button name="button_confirm" string="Confirmer" class="oe_highlight"
                                 type="object" groups="exam_polylangue.exam_group_user" data-hotkey="v"
                                 attrs="{'invisible': [('status', '!=', 'draft')]}"/>
 
@@ -34,34 +35,49 @@
                                 attrs="{'readonly': [('status', '!=', 'draft')]}" 
                                 domain="[('status','=','open')]"/>
                         <field name="branch_id" readonly="1"/>
+                        <field name="status_paiment" readonly="1"></field>
                    </group>
-                    <group name="participants" string="Participants">
-                            
-                            <field name="participant_edof" domain="[('status','=','INTRAINING'), ('branch_id','=',branch_id)]" 
-                                    options="{'no_create': True, 'no_update': True}"
+                    <notebook name="participants" string="Participants">
+                        <page name="participant_EDOF_page" string="Participants Edof">
+                            <field name="participant_edof" domain="[('status','not in',['INTRAINING','EXAM_SCHEDULED','EXAM_TO_CONFIRM','ACCEPTED']), ('branch_id','=',branch_id)]" 
+                                    options="{'no_create': True, 'no_update': True  }"
                                     attrs="{'readonly': [('status', '!=', 'draft')]}" >
-                                <tree>
-                                    <field name="attendee_last_name" />
-                                    <field name="attendee_first_name" />
-                                    <field name="status" />
-                                    <field name="folder_number" />
+                                <tree editable="top">
+                                    <field name="attendee_last_name" readonly="1" />
+                                    <field name="attendee_first_name" readonly="1" />
+                                    <field name="attendee_email" />
+                                    <field name="attendee_phone_number" />
+                                    <field name="gender" />
+                                    <field name="birth_day" />
+                                    <field name="nationality" />
+                                    <field name="motivation" />
+                                    <field name="n_cni_ts" />
+                                    <field name="insciption_file"  />
                                 </tree>
                             </field>
-
-                            <field name="participant_hors_cpf" domain="[('status','=','intraining'),('branch_id','=',branch_id)]" 
-                                    options="{'no_create': True, 'no_update': True}" 
-                                    attrs="{'readonly': [('status', '!=', 'draft')]}"
-                                    context="{'tree_view_ref' : 'exam__polylangue.dossier_list_reduct_view'}" >
-                                <tree>
-                                    <field name="last_name" />
-                                    <field name="first_name" />
-                                    <field name="status" />
-                                    <field name="number" />
+                        </page>
+                        <page name="participant_hors_CPF" string="Participants hors CPF">
+                            <field name="participant_hors_cpf" domain="[('status','not in',['intraining','exam_sheduled','exam_to_confirm', 'accepted']),('branch_id','=',branch_id)]" 
+                                    options="{'no_create': True, 'no_update': True }" 
+                                    attrs="{'readonly': [('status', '!=', 'draft')]}" >
+                                <tree editable="top,bottom">
+                                    <field name="last_name" readonly="1" />
+                                    <field name="first_name" readonly="1" />
+                                    <field name="email" />
+                                    <field name="phone" />
+                                    <field name="gender" />
+                                    <field name="birth_day" />
+                                    <field name="nationality" />
+                                    <field name="motivation" />
+                                    <field name="n_cni_ts" />
+                                    <field name="insciption_file"  />
+                                    <field name="status" readonly="1" />
                                 </tree>
-                               
+                            
                             </field>
+                        </page>
+                    </notebook>
 
-                    </group>
                 </sheet>
             </form>
         </field>

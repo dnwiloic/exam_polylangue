@@ -14,8 +14,8 @@ class Session(models.Model):
     name = fields.Char("Libelé")
     date = fields.Date("Date de l'examen", required=True)
     time = fields.Float(string='Heure Examen', default="10.0", required=True)
-    min_cand = fields.Integer("Nombre minimun de candidat", default=0, required=True)
-    max_cand = fields.Integer("Nombre maximun de candidat", default=100, required=True)
+    min_cand = fields.Integer("Nombre minimun de candidat", default=2, required=True)
+    max_cand = fields.Integer("Nombre maximun de candidat", default=15, required=True)
     branch_id = fields.Many2one(comodel_name="res.branch",string="Agence", required=True)
     examinateur = fields.Many2one("res.users",required=True)
     examen_id = fields.Many2one("product.product",required=True)
@@ -23,6 +23,15 @@ class Session(models.Model):
     have_insc = fields.Boolean(compute="_compute_have_insc", store=True)
     status = fields.Selection(SESSION_STATES, default="open", store=True, compute="_compute_nbr_inscription")
     nbr_cand = fields.Integer("Nombre d'inscriptions", compute="_compute_nbr_inscription", store=True, default=0)
+    
+
+    # candidat liee a la session
+    # cand_edof = fields.One2many(comodel_name="edof.registration.folder", inverse_name='exam_session_id')
+    # cand_hcpf = fields.One2many(comodel_name="gestion.formation.dossier", inverse_name='exam_session_id')
+    # candidats dont l'incription est valide
+    participant_edof = fields.Many2many("edof.registration.folder", relation='validation_participant_hors_cpf_rel')
+    participant_hors_cpf = fields.Many2many("gestion.formation.dossier", relation='validation__participant_edof_rel')
+
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -41,8 +50,8 @@ class Session(models.Model):
                 # Ajouter 3 semaines à la date actuelle
                 future_date = current_date + timedelta(weeks=3)
                 # Vérifier si la date choisie est au moins 3 semaines dans le futur
-                if record.date < future_date:
-                    raise models.ValidationError("La date doit être au moins 3 semaines dans le futur.")
+                # if record.date < future_date:
+                #     raise models.ValidationError("La date doit être au moins 3 semaines dans le futur.")
                 
     @api.onchange('date','branch_id','examen_id')
     def _on_session_attr_change(self):
@@ -77,3 +86,35 @@ class Session(models.Model):
             nbr_cpf = nbr_cpf + len(elt.participant_hors_cpf)
 
         return nbr_edof + nbr_cpf
+    
+    # mise a jours des status apres vaidation
+    @api.onchange('participant_edof')
+    def _onparticipant_edof_change(self):
+        for record in self:
+            for inc in self.inscription_ids:
+                for p in inc.participant_edof:
+                    if p in record.participant_edof and p.status != 'EXAM_SCHEDULED':
+                        p.sudo().write({
+                            'status': 'EXAM_SCHEDULED'
+                        })
+                    elif p not in record.participant_edof and p.status == 'EXAM_SCHEDULED':
+                        p.sudo().write({
+                            'status': 'EXAM_TO_SCHEDULE'
+                        })
+
+
+    @api.onchange('participant_hors_cpf')
+    def _onparticipant_horcpf_change(self):        
+        for record in self:
+            for inc in self.inscription_ids:
+                for p in inc.participant_hors_cpf:
+                    if p in record.participant_hors_cpf and p.status != 'exam_scheduled':
+                        p.sudo().write({
+                            'status': 'exam_scheduled'
+                        })
+                    elif p not in record.participant_hors_cpf and p.status == 'exam_scheduled':
+                        p.sudo().write({
+                            'status': 'exam_to_schedule'
+                        })
+
+

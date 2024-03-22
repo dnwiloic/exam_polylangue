@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- <odoo> -->
+<odoo noupdate="1">
+
+    <!-- Data to load -->
+    <record id="product_eexam_voltaire" model="product.template">
+        <field name="name">Voltaire</field>
+        <field name="detailed_type">service</field>
+        <field name="is_exam">True</field>
+        <field name="list_price">0</field>
+    </record>
+
+    <record id="product_exam_cloe" model="product.template">
+        <field name="name">Cloe</field>
+        <field name="detailed_type">service</field>
+        <field name="is_exam">True</field>
+        <field name="list_price">0</field>
+    </record>
+
+    <record id="product_exam_robert" model="product.template">
+        <field name="name">Robert</field>
+        <field name="detailed_type">service</field>
+        <field name="is_exam">True</field>
+        <field name="list_price">0</field>
+    </record>
+
+    <record id="product_exam_Quebec_Canada" model="product.template">
+        <field name="name">Quebec Canada</field>
+        <field name="detailed_type">service</field>
+        <field name="is_exam">True</field>
+        <field name="list_price">150</field>
+    </record>
+
+    <record id="product_exam_TEF" model="product.template">
+        <field name="name">TEF</field>
+        <field name="detailed_type">service</field>
+        <field name="is_exam">True</field>
+        <field name="list_price">170</field>
+    </record>
+
+    <record id="product_exam_Fast_Pass_8" model="product.template">
+        <field name="name"> Fast Pass 8</field>
+        <field name="detailed_type">service</field>
+        <field name="is_exam">False</field>
+        <field name="is_pass">True</field>
+        <field name="penality_limit">8.0</field>
+        <field name="list_price">150</field>
+    </record>
+
+     <record id="product_exam_Fast_Pass_2" model="product.template">
+        <field name="name"> Fast Pass 2</field>
+        <field name="detailed_type">service</field>
+        <field name="is_exam">False</field>
+        <field name="is_pass">True</field>
+        <field name="penality_limit">2.0</field>
+        <field name="list_price">300</field>
+    </record>
+
+    <record id="product_exam_TEF_FO" model="product.template">
+        <field name="name">TEF FO</field>
+        <field name="detailed_type">service</field>
+        <field name="is_exam">True</field>
+        <field name="list_price">150</field>
+    </record>
+
+</odoo>

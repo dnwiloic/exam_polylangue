@@ -7,7 +7,7 @@
     'website': "https://digitalexpertize.com",
     'category': 'Uncategorized',
     'version': '16.0.1',
-    'depends': ['base', 'gestion_formation','edof_data'],
+    'depends': ['base', 'account', 'gestion_formation','edof_data'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
@@ -15,7 +15,10 @@
         'views/inscription.xml',
         'views/session.xml',
         'views/folder.xml',
-        'data/mail_template_data.xml'
+        'views/res_user_view.xml',
+        'views/product_view.xml',
+        'data/mail_template_data.xml',
+        'data/product_template.xml'
     ],
     "license": "OPL-1",
     'installable': True,
