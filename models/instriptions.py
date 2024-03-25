@@ -177,7 +177,7 @@ class inscription(models.Model):
                 for partner in simalars_partner:
                     invoice_data['partner_id'] = partner.id
                     try :
-                        self.invoice_id = self.env['account.move'].create(invoice_data)
+                        self.invoice_id = self.env['account.move'].sudo().create(invoice_data)
                         break
                     except :
                         pass
@@ -187,7 +187,7 @@ class inscription(models.Model):
             #     line.sudo().unlink()    
 
         # create new product line
-        self.env['account.move.line'].create({
+        self.env['account.move.line'].sudo().create({
                 'move_id': self.invoice_id.id,
                 'product_id': self.session_id.examen_id.id,
                 'name': self._compute_invoice_description(),
@@ -199,7 +199,7 @@ class inscription(models.Model):
         # check and add penality
         pass_product = self._get_penality_product()
         if pass_product :
-            self.env['account.move.line'].create({
+            self.env['account.move.line'].sudo().create({
                 'move_id': self.invoice_id.id,
                 'product_id': pass_product.id,
                 'name': f"Pénalité pour une inscription éffectué durant les {pass_product.penality_limit} jours précédant la date de l'examen",
@@ -217,7 +217,7 @@ class inscription(models.Model):
         action = self.invoice_id.with_context(discard_logo_check=True).sudo().action_invoice_sent()
         action_context = action['context']
 
-        self.invoice_id.with_context(**action_context).message_post_with_template(action_context.get('default_template_id'))
+        self.invoice_id.with_context(**action_context).sudo().message_post_with_template(action_context.get('default_template_id'))
 
 
     def button_confirm(self, confirm=False):
