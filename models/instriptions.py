@@ -168,7 +168,7 @@ class inscription(models.Model):
                 'journal_id': self._get_default_journal().id
             }
             try :
-                self.invoice_id = self.env['account.move'].create(invoice_data)
+                self.invoice_id = self.env['account.move'].sudo().create(invoice_data)
             except Exception as e:
                 simalars_partner = self.env['res.partner'].sudo().search([
                     ('name','=',self.branch_id.company_id.partner_id.name),
