@@ -182,9 +182,9 @@ class inscription(models.Model):
                     except :
                         pass
                     raise models.ValidationError("Impossible de creer la facture")
-        else :
-            for line in self.invoice_id.line_ids:
-                line.sudo().unlink()    
+        # else :
+            # for line in self.invoice_id.line_ids:
+            #     line.sudo().unlink()    
 
         # create new product line
         self.env['account.move.line'].create({
