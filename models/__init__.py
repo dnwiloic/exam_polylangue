@@ -7,4 +7,5 @@ from . import res_users
 from . import product
 from . import registration_folder
 from . import dossiers
+from . import res_config_settings
 

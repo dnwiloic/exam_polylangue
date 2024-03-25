@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="res_config_settings_view_form" model="ir.ui.view">
+            <field name="name">res.config.settings.view.form.exam</field>
+            <field name="model">res.config.settings</field>
+            <!-- <field name="priority" eval="40"/> -->
+            <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[hasclass('settings')]" position="inside">
+                    <!-- <field name="country_code" invisible="1" groups="account.group_account_manager"/> -->
+                    <div class="app_settings_block" data-string="Examen" id='exam' string="Examen" data-key="exam_polylangue" groups="exam_polylangue.exam_group_manager">
+                        <h2>Gestion des Sessions D'Examen</h2>
+                        <div class="row mt16 o_settings_container" name="default_exam_setting_container">
+                            <div class="col-12  o_setting_box"
+                                id="default_exam_date_precauton"
+                                title="Ceci est appliqué a toute les sessions qui serons créé.">
+                                <div class="o_setting_left_pane"/>
+                                <div class="o_setting_right_pane">
+                                    <span class="o_form_label">Programmation des examens</span>
+                                    <!-- <span class="fa fa-lg fa-note-o" title="Values set here are company-specific." aria-label="Values set here are company-specific." groups="base.group_multi_company" role="img"/> -->
+                                    <div class="text-muted">
+                                        Interval de temps minimale entre la creation d'une session d'examen et le passage de celle-ci
+                                    </div>
+                                    <div class="content-group">
+                                        <group >
+                                            <field name="limited_day_before_exam_session"/>
+                                            <field name="day_before_exam_session" attrs="{'invisible':[('limited_day_before_exam_session','=',False)]}"/>
+                                        </group>
+
+                                        <!-- <div class="row mt16">
+                                            <label string="Sales Tax" for="sale_tax_id" class="col-lg-3 o_light_label"/>
+                                            <field name="sale_tax_id" domain="[('type_tax_use', 'in', ('sale', 'all')), ('company_id', '=', company_id)]"/>
+                                        </div>
+                                        <div class="row">
+                                            <label string="Purchase Tax" for="purchase_tax_id" class="col-lg-3 o_light_label"/>
+                                            <field name="purchase_tax_id" domain="[('type_tax_use', 'in', ('purchase', 'all')), ('company_id', '=', company_id)]"/>
+                                        </div> -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                       
+                        <h2>Facturation des Inscriptions aux examens</h2>
+                        <div class="row mt16 o_settings_container" name="default_invoicing_setting_container">
+                            <div class="col-12  o_setting_box"
+                                id="default_inscription_invoicing"
+                                title="Ceci est appliqué a toute les incription qui serons créé.">
+
+                                <div class="o_setting_left_pane"/>
+                                <div class="o_setting_right_pane">
+                                    <span class="o_form_label">Facturation des inscription</span>
+                                    <div class="content-group">
+                                        <group >
+                                            <field name="choose_session_accounting_comopany"/>
+                                            
+
+                                            <field name="session_accounting_comopany" attrs="{'invisible':[('choose_session_accounting_comopany','=','current')]}"/>
+                                            <!-- <div class="text-muted">
+                                                Interval de temps minimale entre la creation d'une session d'examen et le passage de celle-ci
+                                            </div> -->
+
+
+                                            <!-- <field name="not_invoiced_branch"/> -->
+                                            
+                                        </group>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+
+        
+
+    </data>
+</odoo>

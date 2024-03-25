@@ -9,7 +9,7 @@ class inscription(models.Model):
     STATUS = [
         ('draft', 'Brouillon'),
         ('confirm', 'Confirmé'),
-        ('paid', 'Payé'),
+        ('validate', 'Validé'),
         ('cancel', 'Annulé')
     ]
 
@@ -42,6 +42,7 @@ class inscription(models.Model):
     @api.depends('session_id')
     def _compute_branch(self):
         for record in self:
+            print(f"================================ {self.invoice_id.id}")
             if record.session_id:
                 record.branch_id = record.session_id.branch_id
             else:
@@ -62,45 +63,84 @@ class inscription(models.Model):
                 raise models.ValidationError(f"Vous devez inscrire au minimum {min} candidat(s) a cette session")
             
         return True
+    
+    def _check_required_info_for_inscription(self):
+        self.ensure_one()
+        for p in self.participant_edof:
+            if not p.gender or not p.birth_day or not p.nationality \
+                or not p.motivation or not p.n_cni_ts or not p.insciption_file :
+                raise models.ValidationError(f"Les champs 'genre', 'data de naissance', 'pays de nationalité', 'motivation','N° de CNI/TS' et 'fichier' sont requis pour inscrire un candidat.\
+                                 \n Veuillez tous les renseigner chez {p.attendee_last_name} {p.attendee_first_name} et autres")
+        
+        for p in self.participant_hors_cpf:
+            if not p.gender or not p.birth_day or not p.nationality \
+                or not p.motivation or not p.n_cni_ts or not p.insciption_file :
+                raise models.ValidationError(f"Les champs 'genre', 'data de naissance', 'pays de nationalité', 'motivation','N° de CNI/TS' et 'fichier' sont requis pour inscrire un candidat.\
+                                 \n Veuillez tous les renseigner chez {p.first_name} {p.last_name} et autres")
+        return True
+    
+    def _get_invoiced_company(self):
+        if self.env['ir.config_parameter'].sudo().get_param("exam_polylangue.choose_session_accounting_comopany") == 'other':
+            cmp_id = int(self.env['ir.config_parameter'].sudo().get_param("exam_polylangue.session_accounting_comopany"))
+            return self.env['res.company'].sudo().search([('id','=',cmp_id)])
+        else :
+            return self.env.company
+
+    def _should_be_invoiced(self):
+        self.ensure_one()
+        not_invoiced_company_id = self._get_invoiced_company().id
+        if not_invoiced_company_id and not_invoiced_company_id == self.branch_id.company_id.id:
+            return False
+
+        return True
+    
+    def _validate_inscription(self):
+        self.ensure_one()
+        
+        if not self._should_be_invoiced():
+            if self.status != 'confirm' : return    
+            self.status = 'validate'
+
+        elif self.invoice_id and self.invoice_id.payment_state == 'paid':
+            self.status = 'validate'
+        else: 
+            return
+
+        for person in self.participant_edof:
+            person.sudo().write({
+                'exam_date': self.session_id.date,
+                'time': self.session_id.time,
+                'exam_center_id': self.branch_id.id,
+                'status': 'EXAM_TO_CONFIRM',
+                'exam_session_id': self.session_id.id
+            })
+
+        for person in self.participant_hors_cpf:
+            person.sudo().write({
+                'exam_date': self.session_id.date,
+                'time': self.session_id.time,
+                'exam_center_id': self.branch_id.id,
+                'status': 'exam_to_confirm',
+                'exam_session_id': self.session_id.id
+            })
+
 
     @api.depends('invoice_id.payment_state')
     def _compute_status(self):
         for record in self:
-            if record.invoice_id and record.invoice_id.payment_state == 'paid':
-                record.status = 'paid'
-
-                for person in record.participant_edof:
-                    print(f"=========={record.session_id}")
-                    print(f"=========={person}")
-                    person.sudo().write({
-                        'exam_date': record.session_id.date,
-                        'time': record.session_id.time,
-                        'exam_center_id': record.branch_id.id,
-                        'status': 'EXAM_TO_CONFIRM',
-                        'exam_session_id': record.session_id.id
-                    })
-
-                for person in record.participant_hors_cpf:
-                    person.sudo().write({
-                        'exam_date': record.session_id.date,
-                        'time': record.session_id.time,
-                        'exam_center_id': record.branch_id.id,
-                        'status': 'exam_to_confirm',
-                        'exam_session_id': record.session_id.id
-                    })
-
+           record._validate_inscription()
                
 
 
     def _get_default_journal(self):
         self.ensure_one()
-        journal = self.env['account.journal'].search([('code','=',"INS_E"), ('type','=','sale'), ('company_id','=',self.env.company.id)])
+        journal = self.env['account.journal'].search([('code','=',"INS_E"), ('type','=','sale'), ('company_id','=',self._get_invoiced_company().id)])
         if not journal:
-            journal = self.env['account.journal'].create({
+            journal = self.env['account.journal'].sudo().create({
                 'name': "Inscription examen",
                 'code': "INS_E",
                 'type': "sale",
-                'company_id': self.env.company.id
+                'company_id': self._get_invoiced_company().id
             })
 
         return journal
@@ -181,14 +221,16 @@ class inscription(models.Model):
 
     def button_confirm(self, confirm=False):
         self.ensure_one()
-        if self._check_participant_limits() and self.branch_id and self.branch_id.company_id:
-            self._compute_invoice()
-            message = ""
-            for line in self.invoice_id.line_ids:
-                if line.product_id.is_pass:
-                    message = f"""En raison d'une inscription tardive a cette session d'examen, une pénalité de {line.product_id.list_price} {self.invoice_id.currency_id.name} par candidats sera facturé
-                    Voulez-vous vraiment continuer ?"""
-            # if confirm:
+        if self._check_participant_limits() and  self._check_required_info_for_inscription() and self.branch_id and self.branch_id.company_id:
+            if self._should_be_invoiced():
+                self._compute_invoice()
+                message = ""
+                for line in self.invoice_id.line_ids:
+                    if line.product_id.is_pass:
+                        message = f"""En raison d'une inscription tardive a cette session d'examen, une pénalité de {line.product_id.list_price} {self.invoice_id.currency_id.name} par candidats sera facturé
+                        Voulez-vous vraiment continuer ?"""
+                # if confirm:
+                        
             return self.action_confirm() 
             # return {
             #     'type': 'ir.actions.act_window',
@@ -207,10 +249,12 @@ class inscription(models.Model):
 
     def action_confirm(self):
         for insc in self:
-            if not insc.invoice_id:
-                return False
-            insc._post_invoice()
+            if self._should_be_invoiced():
+                if not insc.invoice_id:
+                    return False
+                insc._post_invoice()
             insc.status='confirm'
+            self._validate_inscription()
                 
 
     def button_cancel(self):
@@ -255,3 +299,5 @@ class inscription(models.Model):
     def _compute_payment_state(self):
         for record in self:
             record.status_paiment = record.invoice_id.payment_state
+
+    

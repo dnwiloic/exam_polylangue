@@ -21,4 +21,17 @@
     <menuitem id="menu_inscription_session" name="Inscriptions" parent="menu_examen" sequence="1"
         action="exam_inscription_action" />
 
+    <record id="exam_config_action" model="ir.actions.act_window">
+        <field name="name">Configuration</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module':'exam_polylangue', 'bin_size':False}</field>
+    </record>
+
+    <menuitem id="menu_exam_configuration" name="Configurations" parent="menu_examen" sequence="100"
+        groups="exam_polylangue.exam_group_manager" />
+    <menuitem id="menu_exam_settingd" name="Parametres" parent="menu_exam_configuration" sequence="0"
+        action="exam_config_action" groups="exam_polylangue.exam_group_manager" />
 </odoo>

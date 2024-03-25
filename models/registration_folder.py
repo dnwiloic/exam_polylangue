@@ -31,7 +31,7 @@ class RegistrationFolder(models.Model):
         ('female', "Feminin"),
     ]
 
-    exam_session_id = fields.Many2one('examen.session_id', required=False , readonly=True)
+    exam_session_id = fields.Many2one('examen.session', required=False , readonly=True)
     gender = fields.Selection(GENDER, string='genre' , required=False)
     birth_day = fields.Date(string='date de naissance' , required=False)
     nationality = fields.Many2one('res.country','Pays de nationalité',required=False )
@@ -47,3 +47,28 @@ class RegistrationFolder(models.Model):
         #     return [("INTRAINING", "En formation"), ("FINISHED_TRAINING", "Sortie de formation"), ("ACCEPTED", "Accepté"),]
         # else:
         return self.STATUS
+    
+    def send_exam_convocation(self):
+        template = self.env.ref('exam_polylangue.email_template_exam_convocation_edof')
+        for rec in self:
+            rec.message_post_with_template(template.id )
+
+    
+    def get_exam_time(self):
+        # Convertir le float en secondes
+        float_value = self.time
+        total_seconds = int(float_value * 3600)
+
+        # Calculer les heures, minutes et secondes
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+
+        # Créer un objet time
+        time_object = datetime.time(hours, minutes)
+
+        # Formater la chaîne de caractères au format heure
+        time_str = time_object.strftime('%H:%M')
+
+        return time_str
+
+            

@@ -6,16 +6,17 @@
         <field name="model">examen.inscription</field>
         <field name="arch" type="xml">
             <form string="">
+                <field name="invoice_id" invisible="1"></field>
                 <header>
                     <button name="button_cancel" string="Annuler"
                                 confirm='Cette action est ireversible a {branch_id}. Voulez-vous vraiment annuler cette inscription ?'
                                 type="object" groups="exam_polylangue.exam_group_user" data-hotkey="v"
-                                attrs="{'invisible': [('status', 'in', ['cancel','paid'])]}"/>
+                                attrs="{'invisible': [('status', '!=', 'draft')]}"/>
                      <button name="button_confirm" string="Confirmer" class="oe_highlight"
                                 type="object" groups="exam_polylangue.exam_group_user" data-hotkey="v"
                                 attrs="{'invisible': [('status', '!=', 'draft')]}"/>
 
-                    <field name="status" widget="statusbar" statusbar_visible="draft,confirm,paid"/>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,confirm,validate"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -24,7 +25,7 @@
                             class="oe_stat_button"
                             groups="account.group_account_invoice"
                             icon="fa-pencil-square-o"
-                            attrs="{'invisible':  [('status', 'not in', ['paid','confirm'])]}">
+                            attrs="{'invisible':  [('invoice_id', '=', False)]}">
                             Facture
                             <!-- <field name="invoice_count" widget="statinfo" string="Invoices"/> -->
                         </button>
@@ -35,7 +36,7 @@
                                 attrs="{'readonly': [('status', '!=', 'draft')]}" 
                                 domain="[('status','=','open')]"/>
                         <field name="branch_id" readonly="1"/>
-                        <field name="status_paiment" readonly="1"></field>
+                        <field name="status_paiment" readonly="1" attrs="{'invisible':  [('invoice_id', '=', False)]}" />
                    </group>
                     <notebook name="participants" string="Participants">
                         <page name="participant_EDOF_page" string="Participants Edof">
@@ -71,7 +72,7 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
-                                    <field name="status" readonly="1" />
+                                    <!-- <field name="status" readonly="1" /> -->
                                 </tree>
                             
                             </field>
