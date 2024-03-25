@@ -134,7 +134,8 @@ class inscription(models.Model):
 
     def _get_default_journal(self):
         self.ensure_one()
-        journal = self.env['account.journal'].search([('code','=',"INS_E"), ('type','=','sale'), ('company_id','=',self._get_invoiced_company().id)])
+        journal = self.env['account.journal'].sudo().search([('type','=','sale'), ('company_id','=',self._get_invoiced_company().id)], limit=1)
+        print(f"================ {journal.code}, {journal.type}, {journal.name} ")
         if not journal:
             journal = self.env['account.journal'].sudo().create({
                 'name': "Inscription examen",
@@ -180,10 +181,10 @@ class inscription(models.Model):
                         break
                     except :
                         pass
-                    raise e
+                    raise models.ValidationError("Impossible de creer la facture")
         else :
             for line in self.invoice_id.line_ids:
-                line.unlink()    
+                line.sudo().unlink()    
 
         # create new product line
         self.env['account.move.line'].create({
