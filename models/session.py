@@ -129,7 +129,7 @@ class Session(models.Model):
         for move in self:
             if 'participant_edof' in vals:
                 for inc in move.inscription_ids:
-                    print(f"========================{vals['participant_edof'][-1][-1]}")
+                    # print(f"========================{vals['participant_edof'][-1][-1]}")
                     for p in inc.participant_edof:
                         if p.id in vals['participant_edof'][-1][-1] and p.status != 'EXAM_SCHEDULED':
                             p.sudo().write({
@@ -142,7 +142,7 @@ class Session(models.Model):
             
             if 'participant_hors_cpf' in vals:
                 for inc in move.inscription_ids:
-                    print(f"========================{vals['participant_hors_cpf'][-1][-1]}")
+                    # print(f"========================{vals['participant_hors_cpf'][-1][-1]}")
                     for p in inc.participant_hors_cpf:
                         if p.id in vals['participant_hors_cpf'][-1][-1] and p.status != 'exam_scheduled':
                             p.sudo().write({
