@@ -50,7 +50,7 @@ class Dossier(models.Model):
             rec.message_post_with_template(template.id )
 
     def get_exam_name(self):
-        return self.exam_session_id.examen_id.name
+        return self.sudo().exam_session_id.examen_id.name
     
     def get_exam_time(self):
         # Convertir le float en secondes

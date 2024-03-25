@@ -51,7 +51,7 @@ class RegistrationFolder(models.Model):
     def send_exam_convocation(self):
         template = self.env.ref('exam_polylangue.email_template_exam_convocation_edof')
         for rec in self:
-            rec.message_post_with_template(template.id )
+            rec.sudo().message_post_with_template(template.id )
 
     
     def get_exam_time(self):

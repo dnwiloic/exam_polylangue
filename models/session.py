@@ -42,7 +42,9 @@ class Session(models.Model):
             vals['name'] = f"SESSION - {branch_id.name} - {vals['date']}"
         
         return super(Session, self).create(vals_list)
-    # Définir une contrainte
+    
+
+    # Définir des contraintes
     @api.constrains('date')
     def _check_future_date(self):
         for record in self:
@@ -55,7 +57,15 @@ class Session(models.Model):
                 future_date = current_date + timedelta(days=min_interval)
                 if not record.date or  record.date < future_date:
                     raise models.ValidationError(f"La date doit être au moins {min_interval} Jours dans le futur.")
-                
+    
+    @api.constrains('time')
+    def _check_time(self):
+        for record in self:
+            if record.time < 0 or record.time >= 24.0:
+                raise models.ValidationError(f"Horaire invalide")
+
+
+
     @api.onchange('date','branch_id','examen_id')
     def _on_session_attr_change(self):
         if self.date and self.branch_id and self.branch_id:
