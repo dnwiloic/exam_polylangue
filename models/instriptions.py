@@ -42,7 +42,6 @@ class inscription(models.Model):
     @api.depends('session_id')
     def _compute_branch(self):
         for record in self:
-            print(f"================================ {self.invoice_id.id}")
             if record.session_id:
                 record.branch_id = record.session_id.branch_id
             else:
@@ -67,15 +66,15 @@ class inscription(models.Model):
     def _check_required_info_for_inscription(self):
         self.ensure_one()
         for p in self.participant_edof:
-            if not p.gender or not p.birth_day or not p.nationality \
+            if not p.gender or not p.birth_day or not p.nationality or not p.maternal_langage \
                 or not p.motivation or not p.n_cni_ts or not p.insciption_file :
-                raise models.ValidationError(f"Les champs 'genre', 'data de naissance', 'pays de nationalité', 'motivation','N° de CNI/TS' et 'fichier' sont requis pour inscrire un candidat.\
+                raise models.ValidationError(f"Les champs 'genre', 'data de naissance', 'pays de nationalité', 'motivation','N° de CNI/TS', 'langue maternelle' et 'fichier' sont requis pour inscrire un candidat.\
                                  \n Veuillez tous les renseigner chez {p.attendee_last_name} {p.attendee_first_name} et autres")
         
         for p in self.participant_hors_cpf:
-            if not p.gender or not p.birth_day or not p.nationality \
+            if not p.gender or not p.birth_day or not p.nationality or not not p.maternal_langage\
                 or not p.motivation or not p.n_cni_ts or not p.insciption_file :
-                raise models.ValidationError(f"Les champs 'genre', 'data de naissance', 'pays de nationalité', 'motivation','N° de CNI/TS' et 'fichier' sont requis pour inscrire un candidat.\
+                raise models.ValidationError(f"Les champs 'genre', 'data de naissance', 'pays de nationalité', 'motivation','N° de CNI/TS', 'langue maternelle' et 'fichier' sont requis pour inscrire un candidat.\
                                  \n Veuillez tous les renseigner chez {p.first_name} {p.last_name} et autres")
         return True
     
@@ -135,7 +134,6 @@ class inscription(models.Model):
     def _get_default_journal(self):
         self.ensure_one()
         journal = self.env['account.journal'].sudo().search([('type','=','sale'), ('company_id','=',self._get_invoiced_company().id)], limit=1)
-        print(f"================ {journal.code}, {journal.type}, {journal.name} ")
         if not journal:
             journal = self.env['account.journal'].sudo().create({
                 'name': "Inscription examen",

@@ -34,6 +34,7 @@ class Dossier(models.Model):
     nationality = fields.Many2one('res.country','Pays de nationalité')
     motivation = fields.Text()
     n_cni_ts = fields.Char('N° de CNI/TS')
+    maternal_langage = fields.Char("langue maternelle")
     insciption_file = fields.Binary(
         string='Fichier'
     )

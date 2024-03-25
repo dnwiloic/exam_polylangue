@@ -51,6 +51,7 @@
                                     <field name="gender" />
                                     <field name="birth_day" />
                                     <field name="nationality" />
+                                    <field name="maternal_langage" />
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
@@ -69,6 +70,7 @@
                                     <field name="gender" />
                                     <field name="birth_day" />
                                     <field name="nationality" />
+                                    <field name="maternal_langage" />
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />

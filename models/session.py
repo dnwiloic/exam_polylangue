@@ -100,37 +100,6 @@ class Session(models.Model):
 
         return nbr_edof + nbr_cpf
     
-    # mise a jours des status apres vaidation
-    # @api.depends('participant_edof')
-    # def _compute_participant_edof(self):
-    #     for record in self:
-    #         print("===================== participant_edof chande")
-    #         for inc in self.inscription_ids:
-    #             for p in inc.participant_edof:
-    #                 if p in record.participant_edof and p.status != 'EXAM_SCHEDULED':
-    #                     p.sudo().write({
-    #                         'status': 'EXAM_SCHEDULED'
-    #                     })
-    #                 elif p not in record.participant_edof and p.status == 'EXAM_SCHEDULED':
-    #                     p.sudo().write({
-    #                         'status': 'EXAM_TO_SCHEDULE'
-    #                     })
-
-
-    # @api.depends('participant_hors_cpf')
-    # def _compute_participant_horcpf(self):        
-        for record in self:
-            print("===================== participant_hors_cpf chande")
-            for inc in self.inscription_ids:
-                for p in inc.participant_hors_cpf:
-                    if p in record.participant_hors_cpf and p.status != 'exam_scheduled':
-                        p.sudo().write({
-                            'status': 'exam_scheduled'
-                        })
-                    elif p not in record.participant_hors_cpf and p.status == 'exam_scheduled':
-                        p.sudo().write({
-                            'status': 'exam_to_schedule'
-                        })
 
     def write(self, vals):
         if not vals:
@@ -139,7 +108,6 @@ class Session(models.Model):
         for move in self:
             if 'participant_edof' in vals:
                 for inc in move.inscription_ids:
-                    # print(f"========================{vals['participant_edof'][-1][-1]}")
                     for p in inc.participant_edof:
                         if p.id in vals['participant_edof'][-1][-1] and p.status != 'EXAM_SCHEDULED':
                             p.sudo().write({
@@ -152,7 +120,6 @@ class Session(models.Model):
             
             if 'participant_hors_cpf' in vals:
                 for inc in move.inscription_ids:
-                    # print(f"========================{vals['participant_hors_cpf'][-1][-1]}")
                     for p in inc.participant_hors_cpf:
                         if p.id in vals['participant_hors_cpf'][-1][-1] and p.status != 'exam_scheduled':
                             p.sudo().write({
