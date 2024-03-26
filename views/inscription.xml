@@ -55,9 +55,9 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
-                                    <field name="status"  invisible="1"/>
+                                    <field name="exam_session_id" invisible="1"/>
                                     <button name="cancel_ins" type="object" string="Annuler" 
-                                            attrs="{'invisible': [('status', '=', 'EXAM_TO_SCHEDULE')]}" 
+                                            attrs="{'invisible': [('exam_session_id', '=', False)]}" 
                                             confirm="Voulez-vous vraiment annuler cette inscription ?"/>
                                 </tree>
                             </field>
