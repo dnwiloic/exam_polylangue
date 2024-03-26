@@ -8,13 +8,18 @@ class ResConfigSettings(models.TransientModel):
         ('current','Société Courrante'),
         ('other', 'Autre société')
     ]
-    limited_day_before_exam_session = fields.Boolean(
-        string="Empecher la création d'un examen avant un certains nombre de jours ?",
-        config_parameter='exam_polylangue.enable_day_limit_before_exam')
-    day_before_exam_session = fields.Integer(
-        "Nombre minimal de jour avant la session d'examen",
-        config_parameter='exam_polylangue.minimal_day_before_exam',
-        default="21")
+    # limited_day_before_exam_session = fields.Boolean(
+    #     string="Empecher la création d'un examen avant un certains nombre de jours ?",
+    #     config_parameter='exam_polylangue.enable_day_limit_before_exam')
+    nbr_day_before_exam_incription = fields.Integer(
+        "Nombre minimum de jour précédant l'inscription à une session d'examen",
+        config_parameter='exam_polylangue.minimal_day_before_inscription',
+        default="5")
+    
+    nbr_day_before_exam_annulation = fields.Integer(
+        "Nombre minimum de jour précédant l'annulation d'une inscription à un examen",
+        config_parameter='exam_polylangue.minimal_day_before_anunlation',
+        default="3")
     
     choose_session_accounting_comopany = fields.Selection(
         CHOOSE_SESSION_ACCOUNTING_COMPANY, 

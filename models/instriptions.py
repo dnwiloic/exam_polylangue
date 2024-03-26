@@ -1,5 +1,5 @@
 from odoo import fields, models, api, _
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class inscription(models.Model):
@@ -31,6 +31,7 @@ class inscription(models.Model):
     invoice_id = fields.Many2one('account.move', required=False, default=None)
     status_paiment = fields.Selection(PAYMENT_STATE_SELECTION,readonly=True, compute="_compute_payment_state", store=True, default="not_paid")       
 
+    
     def _compute_nbr_insciption(self):
         self.ensure_one()
         return len(self.participant_edof) + len(self.participant_hors_cpf)
@@ -46,7 +47,8 @@ class inscription(models.Model):
                 record.branch_id = record.session_id.branch_id
             else:
                 record.branch_id = None
-            
+    
+    
 
     @api.constrains('participant_edof', 'participant_hors_cpf')
     def _check_participant_limits(self):
@@ -63,6 +65,14 @@ class inscription(models.Model):
             
         return True
     
+    # @api.depends('participant_edof.exam_session_id')
+    # def _compute_participant_edof(self):
+
+    # @api.depends('participant_hors_cpf.exam_session_id')
+    # def _compute_participant_hors_cpf(self):
+    #     for rec in self:
+    #         if rec.status in ['confirm','validate']
+
     def _check_required_info_for_inscription(self):
         self.ensure_one()
         for p in self.participant_edof:

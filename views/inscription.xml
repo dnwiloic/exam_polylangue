@@ -34,7 +34,7 @@
                     <group >
                         <field name="session_id" options="{'no_create': True, 'no_update': True}"
                                 attrs="{'readonly': [('status', '!=', 'draft')]}" 
-                                domain="[('status','=','open')]"/>
+                                domain="[('status','=','open'),('last_inscription_day', '>=',  context_today().strftime('%Y-%m-%d 00:00:00'))]"/>
                         <field name="branch_id" readonly="1"/>
                         <field name="status_paiment" readonly="1" attrs="{'invisible':  [('invoice_id', '=', False)]}" />
                    </group>
@@ -55,6 +55,10 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
+                                    <field name="status"  invisible="1"/>
+                                    <button name="cancel_ins" type="object" string="Annuler" 
+                                            attrs="{'invisible': [('status', '=', 'EXAM_TO_SCHEDULE')]}" 
+                                            confirm="Voulez-vous vraiment annuler cette inscription ?"/>
                                 </tree>
                             </field>
                         </page>
@@ -74,6 +78,12 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
+                                    <field name="status"  invisible="1"/>
+                                    <button name="cancel_ins" type="object" string="Annuler" 
+                                            attrs="{'invisible': [
+                                                ('status', '=', 'exam_to_schedule')
+                                                ]}" 
+                                            confirm="Voulez-vous vraiment annuler cette inscription ?" />
                                     <!-- <field name="status" readonly="1" /> -->
                                 </tree>
                             

@@ -39,6 +39,8 @@ class Dossier(models.Model):
         string='Fichier'
     )
 
+    inscriptions = fields.Many2many("examen.inscription", relation='inscription_participant_edof_rel')
+    last_annulation_day = fields.Date("Delay d'annulation se l'inscription", store=True, compute="_compute_last_annulation_day")
 
 
     @api.model
@@ -69,3 +71,23 @@ class Dossier(models.Model):
         time_str = time_object.strftime('%H:%M')
 
         return time_str
+    
+    def cancel_ins(self):
+        for rec in self:
+            if rec.last_annulation_day < datetime.datetime.now().date():
+                raise models.ValidationError('"Vous ne pouvez plus annuler cette inscription')
+        
+            rec.sudo().write({
+                'status': 'exam_to_schedule',
+                'exam_date': None,
+                'time': None,
+                'exam_center_id': None,
+                'exam_session_id': None
+            })
+
+    @api.depends('exam_session_id.date')
+    def _compute_last_annulation_day(self):
+        min_interval = int(self.env['ir.config_parameter'].sudo().get_param("exam_polylangue.minimal_day_before_anunlation"))
+        for rec in self:
+            if rec.exam_session_id:
+                rec.last_annulation_day = rec.exam_session_id.date - datetime.timedelta(days=min_interval)

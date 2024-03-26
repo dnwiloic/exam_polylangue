@@ -26,7 +26,7 @@ class Session(models.Model):
                               tracking=True)
     nbr_cand = fields.Integer("Nombre d'inscriptions", compute="_compute_nbr_inscription", store=True, default=0)
     
-
+    last_inscription_day = fields.Date("Inscription Date line", store=True ,compute="_compute_last_inscription_day")
     # candidat liee a la session
     # cand_edof = fields.One2many(comodel_name="edof.registration.folder", inverse_name='exam_session_id')
     # cand_hcpf = fields.One2many(comodel_name="gestion.formation.dossier", inverse_name='exam_session_id')
@@ -43,6 +43,16 @@ class Session(models.Model):
         
         return super(Session, self).create(vals_list)
     
+    @api.depends('date')
+    def _compute_last_inscription_day(self):
+        min_interval = int(self.env['ir.config_parameter'].sudo().get_param("exam_polylangue.minimal_day_before_inscription"))
+        for rec in self:
+            print("================ calll _compute_out_inscription_delay")
+            rec.last_inscription_day = rec.date - timedelta(days = min_interval)
+            print(f"================ last day: {rec.last_inscription_day}")
+            print(f"================ rec.date: {rec.date}")
+            print(f"================ min_interval: {min_interval}")
+
 
     # Définir des contraintes
     @api.constrains('date')
@@ -50,13 +60,16 @@ class Session(models.Model):
         for record in self:
             current_date = datetime.now().date()
             if not record.date or  record.date < current_date:
-                    raise models.ValidationError(f"Vous ne pouvez pa programmer un examen dans le passé.")
-            if self.env['ir.config_parameter'].sudo().get_param("exam_polylangue.enable_day_limit_before_exam"):
+                raise models.ValidationError(f"Vous ne pouvez pa programmer un examen dans le passé.")
                 
-                min_interval = int(self.env['ir.config_parameter'].sudo().get_param("exam_polylangue.minimal_day_before_exam"))
-                future_date = current_date + timedelta(days=min_interval)
-                if not record.date or  record.date < future_date:
-                    raise models.ValidationError(f"La date doit être au moins {min_interval} Jours dans le futur.")
+            min_interval = int(self.env['ir.config_parameter'].sudo().get_param("exam_polylangue.minimal_day_before_inscription"))
+            last_date = current_date - timedelta(days=min_interval)
+            if  current_date > last_date:
+                print(f"========================")
+                return {'warning':{
+                    "title": "Date non appropriée",
+                    "message": "Vous ne pouriez pas creer des inscriptions a cette session car le nombre de jour entre la date d'aujourd'hui et la date de l'examen est inferieur au delay necessaire a la creation des inscriptions"
+                }}
     
     @api.constrains('time')
     def _check_time(self):
