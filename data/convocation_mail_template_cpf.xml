@@ -22,7 +22,7 @@
                         Nous sommes heureux de vous confirmer votre inscription à la session de Test:<br />
                         <t t-if="object and object.exam_session_id">
                             <t t-out="object.exam_session_id.examen_id.name"/> <br/>
-                            à <t t-out="object.exam_session_id.branch_id.name"/> <br/>
+                            à <t t-out="object.exam_session_id.exam_center_id.city or ''"/> , <t t-out="object.exam_session_id.exam_center_id.street or object.exam_session_id.exam_center_id.street2 or ''"/> <br/>
                             le <t t-out="object.exam_session_id.date"/> <br/>
                             à <t t-out="object.get_exam_time()"/> <br/>
                         </t>

@@ -5,7 +5,7 @@ import random
 import phonenumbers
 
 
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
@@ -22,6 +22,7 @@ class RegistrationFolder(models.Model):
         ("ACCEPTED", "Accepté"),
         ("EXAM_SCHEDULED", "Examen programmé"),
         ("EXAM_TO_SCHEDULE", "Examen à programmer"),
+        ("EXAM_TO_RESCHEDULE", "Examen à reprogrammer"),
         ("EXAM_TO_CONFIRM", "Examen à confirmer"),
         ("INSUFFICIENT_LEVEL", "Niveau insuffisant")
     ]
@@ -77,16 +78,17 @@ class RegistrationFolder(models.Model):
 
     def cancel_ins(self):
         for rec in self:
-            if rec.last_annulation_day < datetime.now().date():
+            if rec.last_annulation_day < datetime.datetime.now().date():
                 raise models.ValidationError('"Vous ne pouvez plus annuler cette inscription')
 
             rec.sudo().write({
-                'status': 'EXAM_TO_SCHEDULE',
+                'status': 'EXAM_TO_RESCHEDULE',
                 'exam_date': None,
                 'time': None,
                 'exam_center_id': None,
                 'exam_session_id': None
             })
+            rec.inscriptions = [(6, 0, [])]
 
     @api.depends('exam_session_id.date')
     def _compute_last_annulation_day(self):

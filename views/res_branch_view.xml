@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_branch_view_form" model="ir.ui.view">
+        <field name="name">res_branch.view.form</field>
+        <field name="model">res.branch</field>
+        <field name="inherit_id" ref="multi_branch_base.view_branch_form"/>
+        <field name="arch" type="xml">
+            <field name="website" position="after">
+                <field name="is_exam_center"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

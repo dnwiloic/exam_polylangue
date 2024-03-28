@@ -20,6 +20,7 @@ class Dossier(models.Model):
         ("accepted", "Accepté"),
         ("exam_scheduled", "Examen programmé"),
         ("exam_to_schedule", "Examen à programmer"),
+        ("exam_to_reschedule", "Examen à reprogrammer"),
         ("exam_to_confirm", "Examen à confirmer"),
         ("insufficient_level", "Niveau insuffisant")
     ]
@@ -78,12 +79,13 @@ class Dossier(models.Model):
                 raise models.ValidationError('"Vous ne pouvez plus annuler cette inscription')
         
             rec.sudo().write({
-                'status': 'exam_to_schedule',
+                'status': 'exam_to_reschedule',
                 'exam_date': None,
                 'time': None,
                 'exam_center_id': None,
                 'exam_session_id': None
             })
+            rec.inscriptions = [(6, 0, [])]
 
     @api.depends('exam_session_id.date')
     def _compute_last_annulation_day(self):

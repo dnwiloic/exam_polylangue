@@ -32,6 +32,8 @@
                             <field name="examinateur" domain="[('is_examiner','=', True)]" />
                             <field name="min_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
                             <field name="max_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
+                            <field name="exam_center_id" domain="[('is_exam_center', '=', True)]"
+                                    attrs="{'readonly': [('inscription_ids', '!=', [])]}" />
                         </group>
                     </group>
                     <h3 class="mt-3 text-center"> Validation des Inscriptions </h3>

@@ -18,6 +18,7 @@ class Session(models.Model):
     min_cand = fields.Integer("Nombre minimun de candidat", default=2, required=True)
     max_cand = fields.Integer("Nombre maximun de candidat", default=15, required=True)
     branch_id = fields.Many2one(comodel_name="res.branch",string="Agence", required=True)
+    exam_center_id = fields.Many2one(comodel_name="res.branch", string="Lieu de l'examen", required=True)
     examinateur = fields.Many2one("res.users",required=True)
     examen_id = fields.Many2one("product.product",required=True)
     inscription_ids = fields.One2many(comodel_name='examen.inscription', inverse_name='session_id', default=False)

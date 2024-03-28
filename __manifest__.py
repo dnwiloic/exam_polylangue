@@ -18,6 +18,7 @@
         'views/res_user_view.xml',
         'views/res_config_settings_views.xml',
         'views/product_view.xml',
+        'views/res_branch_view.xml',
         'data/convocation_mail_template_cpf.xml',
         'data/convocation_mail_template_edof.xml',
         'data/mail_template_data.xml',

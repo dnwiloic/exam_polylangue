@@ -82,7 +82,7 @@ class inscription(models.Model):
                                  \n Veuillez tous les renseigner chez {p.attendee_last_name} {p.attendee_first_name} et autres")
         
         for p in self.participant_hors_cpf:
-            if not p.gender or not p.birth_day or not p.nationality or not not p.maternal_langage\
+            if not p.gender or not p.birth_day or not p.nationality or not p.maternal_langage \
                 or not p.motivation or not p.n_cni_ts or not p.insciption_file :
                 raise models.ValidationError(f"Les champs 'genre', 'data de naissance', 'pays de nationalité', 'motivation','N° de CNI/TS', 'langue maternelle' et 'fichier' sont requis pour inscrire un candidat.\
                                  \n Veuillez tous les renseigner chez {p.first_name} {p.last_name} et autres")
@@ -119,7 +119,7 @@ class inscription(models.Model):
             person.sudo().write({
                 'exam_date': self.session_id.date,
                 'time': self.session_id.time,
-                'exam_center_id': self.branch_id.id,
+                'exam_center_id': self.session_id.exam_center_id.id,
                 'status': 'EXAM_TO_CONFIRM',
                 'exam_session_id': self.session_id.id
             })
@@ -128,7 +128,7 @@ class inscription(models.Model):
             person.sudo().write({
                 'exam_date': self.session_id.date,
                 'time': self.session_id.time,
-                'exam_center_id': self.branch_id.id,
+                'exam_center_id': self.session_id.exam_center_id.id,
                 'status': 'exam_to_confirm',
                 'exam_session_id': self.session_id.id
             })
@@ -164,6 +164,13 @@ class inscription(models.Model):
         
         return penality_product
 
+    def _get_nbr_already_paid(self):
+        """Return the nomber of inscription already paid"""
+        self.ensure_one()
+        nbr= len( [x for x in self.participant_edof if x.status == "EXAM_TO_RESCHEDULE"] ) \
+                    + len( [x for x in self.participant_hors_cpf if x.status == "exam_to_reschedule"] )
+        print(f"================ {nbr}")
+        return nbr
 
     def _compute_invoice(self):
         self.ensure_one()
@@ -195,11 +202,12 @@ class inscription(models.Model):
             #     line.sudo().unlink()    
 
         # create new product line
+        
         self.env['account.move.line'].sudo().create({
                 'move_id': self.invoice_id.id,
                 'product_id': self.session_id.examen_id.id,
                 'name': self._compute_invoice_description(),
-                'quantity': self._compute_nbr_insciption(), 
+                'quantity': self._compute_nbr_insciption() - self._get_nbr_already_paid(), 
                 # 'account_id': insc.session_id.examen_id.account_id.id, 
             }
         )
@@ -211,7 +219,7 @@ class inscription(models.Model):
                 'move_id': self.invoice_id.id,
                 'product_id': pass_product.id,
                 'name': f"Pénalité pour une inscription éffectué durant les {pass_product.penality_limit} jours précédant la date de l'examen",
-                'quantity': self._compute_nbr_insciption(), 
+                'quantity': self._compute_nbr_insciption() - self._get_nbr_already_paid(), 
                 # 'account_id': insc.session_id.examen_id.account_id.id, 
             })
 
@@ -293,14 +301,16 @@ class inscription(models.Model):
         if len(self.participant_edof) > 0:
             description = f"{description} \n  --- EDOF ---"
             for person in self.participant_edof:
+                repro = " (reprogrammé) " if person.status == "EXAM_TO_RESCHEDULE" else ""
                 description = f"""{description}
-                {person.attendee_last_name} {person.attendee_first_name} {person.folder_number}"""   
+                {person.attendee_last_name} {person.attendee_first_name} {person.folder_number} {repro}"""   
 
         if len(self.participant_hors_cpf) > 0:
             description = f"{description} \n   --- Hors CPF ---"
             for person in self.participant_hors_cpf:
+                repro = " (repregrammé) " if person.status == "exam_to_reschedule" else ''
                 description = f"""{description}
-                {person.last_name} {person.first_name} {person.number}"""   
+                {person.last_name} {person.first_name} {person.number} {repro}"""   
 
         return description
     
