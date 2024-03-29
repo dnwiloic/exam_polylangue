@@ -39,8 +39,8 @@ class Session(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            branch_id = self.env['res.branch'].search([('id','=',vals['branch_id'])])
-            vals['name'] = f"SESSION - {branch_id.name} - {vals['date']}"
+            exam_center_id = self.env['res.branch'].search([('id','=',vals['exam_center_id'])])
+            vals['name'] = f"SESSION - {exam_center_id.name} - {vals['date']}"
         
         return super(Session, self).create(vals_list)
     

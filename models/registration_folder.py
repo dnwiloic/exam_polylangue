@@ -6,6 +6,7 @@ import phonenumbers
 
 
 from datetime import timedelta
+from ..utils  import learner_utils
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
@@ -32,15 +33,17 @@ class RegistrationFolder(models.Model):
         ('female', "Feminin"),
     ]
 
-    exam_session_id = fields.Many2one('examen.session', required=False , readonly=True)
-    gender = fields.Selection(GENDER, string='genre' , required=False)
-    birth_day = fields.Date(string='date de naissance' , required=False)
-    nationality = fields.Many2one('res.country','Pays de nationalité',required=False )
-    motivation = fields.Text(required=False)
-    n_cni_ts = fields.Char('N° de CNI/TS',required=False)
+    
+
+    exam_session_id = fields.Many2one('examen.session',readonly=True)
+    gender = fields.Selection(GENDER, string='genre' , )
+    birth_day = fields.Date(string='date de naissance' , )
+    nationality = fields.Many2one('res.country','Pays de nationalité', )
+    motivation = fields.Selection(learner_utils.MOTIVATIONS_LIST)
+    n_cni_ts = fields.Char('N° de CNI/TS',)
     maternal_langage = fields.Char("langue maternelle")
     insciption_file = fields.Binary(
-        string='Fichier',required=False
+        string='Fichier',
     )
 
     inscriptions = fields.Many2many("examen.inscription", relation='inscription_participant_hors_cpf_rel')
@@ -81,6 +84,7 @@ class RegistrationFolder(models.Model):
             if rec.last_annulation_day < datetime.datetime.now().date():
                 raise models.ValidationError('"Vous ne pouvez plus annuler cette inscription')
 
+            rec.inscriptions = [(6, 0, [x.id for x in rec.inscriptions if x.session_id !=  rec.exam_session_id])]
             rec.sudo().write({
                 'status': 'EXAM_TO_RESCHEDULE',
                 'exam_date': None,
@@ -88,7 +92,6 @@ class RegistrationFolder(models.Model):
                 'exam_center_id': None,
                 'exam_session_id': None
             })
-            rec.inscriptions = [(6, 0, [])]
 
     @api.depends('exam_session_id.date')
     def _compute_last_annulation_day(self):

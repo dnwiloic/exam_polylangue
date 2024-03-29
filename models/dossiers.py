@@ -4,7 +4,7 @@ import phonenumbers
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
-
+from ..utils import learner_utils
 
 _logger = logging.getLogger(__name__)
 
@@ -29,11 +29,11 @@ class Dossier(models.Model):
         ('male', "Masculin"),
         ('female', "Feminin"),
     ]
-    exam_session_id = fields.Many2one('examen.session', readonly=True)
+    exam_session_id = fields.Many2one('examen.session')
     gender = fields.Selection(GENDER, string='genre')
     birth_day = fields.Date(string='date de naissance')
     nationality = fields.Many2one('res.country','Pays de nationalité')
-    motivation = fields.Text()
+    motivation = fields.Selection(learner_utils.MOTIVATIONS_LIST) 
     n_cni_ts = fields.Char('N° de CNI/TS')
     maternal_langage = fields.Char("langue maternelle")
     insciption_file = fields.Binary(
@@ -78,6 +78,7 @@ class Dossier(models.Model):
             if rec.last_annulation_day < datetime.datetime.now().date():
                 raise models.ValidationError('"Vous ne pouvez plus annuler cette inscription')
         
+            rec.inscriptions = [(6, 0, [x.id for x in rec.inscriptions if x.session_id !=  rec.exam_session_id])]
             rec.sudo().write({
                 'status': 'exam_to_reschedule',
                 'exam_date': None,
@@ -85,7 +86,7 @@ class Dossier(models.Model):
                 'exam_center_id': None,
                 'exam_session_id': None
             })
-            rec.inscriptions = [(6, 0, [])]
+            
 
     @api.depends('exam_session_id.date')
     def _compute_last_annulation_day(self):
