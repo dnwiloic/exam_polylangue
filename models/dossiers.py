@@ -12,7 +12,10 @@ _logger = logging.getLogger(__name__)
 class Dossier(models.Model):
     _inherit = 'gestion.formation.dossier'
     
-
+    @api.model
+    def _get_status_list(self):
+        return self.STATUS
+    
     STATUS = [
         ("intraining", "En formation"),
         ("finished_training_or_to_be_billed", "Sortie de formation / À facturer"),
@@ -41,15 +44,26 @@ class Dossier(models.Model):
         string='Fichier'
     )
     status_exam = fields.Selection(learner_utils.STATUS_EXAM, default="none")
+    status = fields.Selection(selection=_get_status_list, string='Statut',
+                              default='ACCEPTED', tracking=True, readonly=False,
+                              compute="_compute_status")
     
     inscriptions = fields.Many2many("examen.inscription", relation='inscription_participant_edof_rel')
     last_annulation_day = fields.Date("Delay d'annulation se l'inscription", store=True, compute="_compute_last_annulation_day")
     nbr_covocation = fields.Integer("Nombres de convocation envoyé", default=0)
 
-    @api.model
-    def _get_status_list(self):
-        return self.STATUS
     
+    
+    @api.depends("status_exam")
+    def _compute_status(self):
+        for rec in self:
+            if rec.status_exam == "register_paid":
+                rec.status = 'exam_to_confirm'
+            if rec.status_exam == "exam_sheduled":
+                rec.status = 'exam_scheduled'
+            if rec.status_exam == "exam_to_reshedule":
+                rec.status = 'exam_to_reschedule'
+
 
     def send_exam_convocation(self):
         template = self.env.ref('exam_polylangue.email_template_exam_convocation_cpf')

@@ -33,6 +33,12 @@ class RegistrationFolder(models.Model):
         ('female', "Feminin"),
     ]
 
+    @api.model
+    def _get_status_list(self):
+        # if self.env.user.has_group('edof_data.edof_group_chef_agence') is True:
+        #     return [("INTRAINING", "En formation"), ("FINISHED_TRAINING", "Sortie de formation"), ("ACCEPTED", "Accepté"),]
+        # else:
+        return self.STATUS
     
 
     exam_session_id = fields.Many2one('examen.session', store=True, readonly=True)
@@ -46,17 +52,24 @@ class RegistrationFolder(models.Model):
         string='Fichier',
     )
     status_exam = fields.Selection(learner_utils.STATUS_EXAM, default="none")
-
+    status = fields.Selection(selection=_get_status_list, string='Statut',
+                              default='ACCEPTED', tracking=True, readonly=False,
+                              compute="_compute_status")
+    
     inscriptions = fields.Many2many("examen.inscription", relation='inscription_participant_hors_cpf_rel')
     last_annulation_day = fields.Date("Delay d'annulation se l'inscription", store=True, compute="_compute_last_annulation_day")
     nbr_covocation = fields.Integer("Nombres de convocations envoyés", default=0)
 
-    @api.model
-    def _get_status_list(self):
-        # if self.env.user.has_group('edof_data.edof_group_chef_agence') is True:
-        #     return [("INTRAINING", "En formation"), ("FINISHED_TRAINING", "Sortie de formation"), ("ACCEPTED", "Accepté"),]
-        # else:
-        return self.STATUS
+    
+    @api.depends("status_exam")
+    def _compute_status(self):
+        for rec in self:
+            if rec.status_exam == "register_paid":
+                rec.status = 'EXAM_TO_CONFIRM'
+            if rec.status_exam == "exam_sheduled":
+                rec.status = 'EXAM_SCHEDULED'
+            if rec.status_exam == "exam_to_reshedule":
+                rec.status = 'EXAM_TO_RESCHEDULE'
     
     def send_exam_convocation(self):
         template = self.env.ref('exam_polylangue.email_template_exam_convocation_edof')
