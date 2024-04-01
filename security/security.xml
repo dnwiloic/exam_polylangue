@@ -30,7 +30,7 @@
             <field name="model_id" ref="model_examen_inscription"/>
             <field name="domain_force"></field>
             <field name="groups" eval="[(4,
-            ref('base.user_admin'))]"/>
+            ref('exam_group_manager'))]"/>
         </record>
 
         <record id="session_user_rule" model="ir.rule">
@@ -48,7 +48,7 @@
             <field name="model_id" ref="model_examen_session"/>
             <field name="domain_force"></field>
             <field name="groups" eval="[(4,
-            ref('base.user_admin'))]"/>
+            ref('exam_group_manager'))]"/>
         </record>
     </data>
 </odoo>
