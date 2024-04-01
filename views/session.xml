@@ -54,14 +54,14 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
-                                    <field name="status"/>
+                                    <field name="status_exam"/>
                                     <field name="folder_number"  />
                                     <button name="validate_exam" string="Valider" type="object"
-                                            attrs="{'invisible': [('status','!=','EXAM_TO_CONFIRM')]}" />
-                                    <button name="cancel_exam" string="Annuler"  type="object"
-                                            attrs="{'invisible': [('status','!=','EXAM_TO_CONFIRM')]}" />
+                                            attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
+                                    <button name="cancel_exam" string="Rejeter"  type="object"
+                                            attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
                                     <button name="send_exam_convocation" string="Convoquer"  type="object"
-                                            attrs="{'invisible': [('status','!=','EXAM_SCHEDULED')]}"
+                                            attrs="{'invisible': [('status_exam','!=','exam_sheduled')]}"
                                             help=" ${nbr_convocations} envoyé(s)" />
                                     
                                 </tree>
@@ -80,14 +80,14 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
-                                    <field name="status" />
+                                    <field name="status_exam" />
                                     <field name="number"  />
                                     <button name="validate_exam" string="Valider"  type="object"
-                                            attrs="{'invisible': [('status','!=','exam_to_confirm')]}" />
-                                    <button name="cancel_exam" string="Annuler"  type="object"
-                                            attrs="{'invisible': [('status','!=','exam_to_confirm')]}" />
+                                            attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
+                                    <button name="cancel_exam" string="Rejeter"  type="object"
+                                            attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
                                     <button name="send_exam_convocation" string="Convoquer" type="object"
-                                            attrs="{'invisible': [('status','!=','exam_scheduled')]}" 
+                                            attrs="{'invisible': [('status_exam','!=','exam_sheduled')]}" 
                                             help=" ${nbr_convocations} envoyé(s)"/>
                                 </tree>
                             

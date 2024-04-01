@@ -114,12 +114,12 @@ class inscription(models.Model):
 
         for person in self.participant_edof:
             person.sudo().write({
-                'status': 'EXAM_TO_CONFIRM',
+                'status_exam': 'register_paid',
             })
 
         for person in self.participant_hors_cpf:
             person.sudo().write({
-                'status': 'exam_to_confirm',
+                'status_exam': 'register_paid',
             })
 
 
@@ -156,8 +156,8 @@ class inscription(models.Model):
     def _get_nbr_already_paid(self):
         """Return the nomber of inscription already paid"""
         self.ensure_one()
-        nbr= len( [x for x in self.participant_edof if x.status == "EXAM_TO_RESCHEDULE"] ) \
-                    + len( [x for x in self.participant_hors_cpf if x.status == "exam_to_reschedule"] )
+        nbr= len( [x for x in self.participant_edof if x.status_exam == "exam_to_reshedule"] ) \
+                    + len( [x for x in self.participant_hors_cpf if x.status_exam == "exam_to_reshedule"] )
         print(f"================ {nbr}")
         return nbr
 
@@ -307,14 +307,14 @@ class inscription(models.Model):
         if len(self.participant_edof) > 0:
             description = f"{description} \n  --- EDOF ---"
             for person in self.participant_edof:
-                repro = " (reprogrammé) " if person.status == "EXAM_TO_RESCHEDULE" else ""
+                repro = " (reprogrammé) " if person.status_exam == "exam_to_reshedule" else ""
                 description = f"""{description}
                 {person.attendee_last_name} {person.attendee_first_name} {person.folder_number} {repro}"""   
 
         if len(self.participant_hors_cpf) > 0:
             description = f"{description} \n   --- Hors CPF ---"
             for person in self.participant_hors_cpf:
-                repro = " (repregrammé) " if person.status == "exam_to_reschedule" else ''
+                repro = " (repregrammé) " if person.status_exam == "exam_to_reshedule" else ''
                 description = f"""{description}
                 {person.last_name} {person.first_name} {person.number} {repro}"""   
 

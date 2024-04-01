@@ -25,7 +25,7 @@ class Session(models.Model):
     max_cand = fields.Integer("Nombre maximun de candidat", default=15, required=True)
 
     responsable_id = fields.Many2one(comodel_name="res.users",string="Responsable", required=True,
-                                     domain= lambda self: [('id', 'in', self.get_responsable_list())])
+                                     domain= lambda self: f"[('id', 'in', {self.get_responsable_list()})]")
     
     exam_center_id = fields.Many2one(comodel_name="res.branch", string="Lieu de l'examen", required=True)
     examinateur = fields.Many2one("res.users",required=True, domain="[('is_examiner','=', True)]")
@@ -82,11 +82,11 @@ class Session(models.Model):
                     "message": "Vous ne pouriez pas creer des inscriptions a cette session car le nombre de jour entre la date d'aujourd'hui et la date de l'examen est inferieur au delay necessaire a la creation des inscriptions"
                 }}
     
-    @api.constrains('responsable_id')
-    def _check_default_branch(self):
-        for rec in self:
-            if not rec.responsable_id or not rec.responsable_id.branch_id:
-                raise models.ValidationError(_("Ce responsable n'a pas de branche par defaut cela pourrais pauser problème lors de l'inscription"))
+    # @api.constrains('responsable_id')
+    # def _check_default_branch(self):
+    #     for rec in self:
+    #         if not rec.responsable_id or not rec.responsable_id.branch_id:
+    #             raise models.ValidationError(_("Ce responsable n'a pas de branche par defaut cela pourrais pauser problème lors de l'inscription"))
 
     @api.constrains('time')
     def _check_time(self):
@@ -131,36 +131,36 @@ class Session(models.Model):
         return nbr_edof + nbr_cpf
     
 
-    def write(self, vals):
-        if not vals:
-            return True
+    # def write(self, vals):
+    #     if not vals:
+    #         return True
         
-        for move in self:
-            if 'participant_edof' in vals:
-                for inc in move.inscription_ids:
-                    for p in inc.participant_edof:
-                        if p.id in vals['participant_edof'][-1][-1] and p.status != 'EXAM_SCHEDULED':
-                            p.sudo().write({
-                                'status': 'EXAM_SCHEDULED'
-                            })
-                        elif p.id not in vals['participant_edof'][-1][-1] and p.status == 'EXAM_SCHEDULED':
-                            p.sudo().write({
-                                'status': 'EXAM_TO_CONFIRM'
-                            })
+    #     for move in self:
+    #         if 'participant_edof' in vals:
+    #             for inc in move.inscription_ids:
+    #                 for p in inc.participant_edof:
+    #                     if p.id in vals['participant_edof'][-1][-1] and p.status != 'EXAM_SCHEDULED':
+    #                         p.sudo().write({
+    #                             'status': 'EXAM_SCHEDULED'
+    #                         })
+    #                     elif p.id not in vals['participant_edof'][-1][-1] and p.status == 'EXAM_SCHEDULED':
+    #                         p.sudo().write({
+    #                             'status': 'EXAM_TO_CONFIRM'
+    #                         })
             
-            if 'participant_hors_cpf' in vals:
-                for inc in move.inscription_ids:
-                    for p in inc.participant_hors_cpf:
-                        if p.id in vals['participant_hors_cpf'][-1][-1] and p.status != 'exam_scheduled':
-                            p.sudo().write({
-                                'status': 'exam_scheduled'
-                            })
-                        elif  p.id not in vals['participant_hors_cpf'][-1][-1] and p.status == 'exam_scheduled':
-                            p.sudo().write({
-                                'status': 'exam_to_confirm'
-                            })
+    #         if 'participant_hors_cpf' in vals:
+    #             for inc in move.inscription_ids:
+    #                 for p in inc.participant_hors_cpf:
+    #                     if p.id in vals['participant_hors_cpf'][-1][-1] and p.status != 'exam_scheduled':
+    #                         p.sudo().write({
+    #                             'status': 'exam_scheduled'
+    #                         })
+    #                     elif  p.id not in vals['participant_hors_cpf'][-1][-1] and p.status == 'exam_scheduled':
+    #                         p.sudo().write({
+    #                             'status': 'exam_to_confirm'
+    #                         })
 
-        return super().write(vals)
+    #     return super().write(vals)
 
 
     def action_semd_convocation_mail(self):

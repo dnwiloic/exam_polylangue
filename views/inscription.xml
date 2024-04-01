@@ -56,9 +56,9 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
-                                    <field name="status" invisible="1"/>
+                                    <field name="status_exam"/>
                                     <button name="cancel_ins" type="object" string="Reprogrammer" 
-                                            attrs="{'invisible': [('status', '=', 'EXAM_TO_RESCHEDULE')]}" 
+                                            attrs="{'invisible': [('status_exam', '!=', 'register_paid')]}" 
                                             confirm="Voulez-vous vraiment annuler cette inscription ?"/>
                                 </tree>
                             </field>
@@ -79,9 +79,9 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
-                                    <field name="status"  invisible="1"/>
+                                    <field name="status_exam"  />
                                     <button name="cancel_ins" type="object" string="Reprogrammer" 
-                                            attrs="{'invisible': [('status', '=', 'exam_to_reshedule')]}" 
+                                            attrs="{'invisible': [('status_exam', '!=', 'register_paid')]}" 
                                             confirm="Voulez-vous vraiment annuler cette inscription ?"/>
                                     <!-- <field name="status" readonly="1" /> -->
                                 </tree>

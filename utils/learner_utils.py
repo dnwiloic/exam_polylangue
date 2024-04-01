@@ -18,3 +18,11 @@ MOTIVATIONS_LIST = [
         ('16', '16. Professions médicales au canada'),
         ('17', '17. Autre motivation professionnzllz'),
     ]
+
+STATUS_EXAM = [
+    ("none","Aucun"),
+    ("registered","inscrit"),
+    ("register_paid","inscription payé"),
+    ("exam_sheduled","exmen programmé"),
+    ("exam_to_reshedule","examen à reprogrammé"),
+]

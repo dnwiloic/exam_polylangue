@@ -40,7 +40,8 @@ class Dossier(models.Model):
     insciption_file = fields.Binary(
         string='Fichier'
     )
-
+    status_exam = fields.Selection(learner_utils.STATUS_EXAM, default="none")
+    
     inscriptions = fields.Many2many("examen.inscription", relation='inscription_participant_edof_rel')
     last_annulation_day = fields.Date("Delay d'annulation se l'inscription", store=True, compute="_compute_last_annulation_day")
     nbr_covocation = fields.Integer("Nombres de convocation envoyé", default=0)
@@ -80,21 +81,20 @@ class Dossier(models.Model):
     
     def validate_exam(self):
         for rec in self:
-            if rec.status != 'exam_to_confirm':
+            if rec.status_exam != 'register_paid':
                 raise models.ValidationError("Impossible de valider cette inscription")
             else :
-                rec.status = 'exam_scheduled'
+                rec.status_exam = 'exam_sheduled'
                 rec.send_exam_convocation()
 
     def cancel_exam(self):
         for rec in self:
             rec.inscriptions = [(6, 0, [x.id for x in rec.inscriptions if x.session_id !=  rec.exam_session_id])]
             rec.sudo().write({
-                'status': 'exam_to_reschedule',
+                'status': 'exam_to_reshedule',
                 'exam_date': None,
                 'time': None,
                 'exam_center_id': None,
-                'exam_session_id': None
             })
 
     def cancel_ins(self):
