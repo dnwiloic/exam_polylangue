@@ -23,32 +23,29 @@
                     <group >
                         <group>
                             <field name="inscription_ids" invisible="1"/>
-                            <field name="date" attrs="{'readonly': [('date', '!=', False)]}"/>
+                            <field name="date" attrs="{'readonly': [('name', '!=', False)]}"/>
                             <field name="time" widget="float_time" attrs="{'readonly': [('inscription_ids', '!=', [])]}" />
                             <field name="examen_id" domain="[('is_exam','=', True), ('is_pass','=', False)]" />
-                            <field name="branch_id" attrs="{'readonly': [('inscription_ids', '!=', [])]}" />
+                            <field name="responsable_id" attrs="{'readonly': [('inscription_ids', '!=', [])]}" />
                         </group>
                         <group>
-                            <field name="examinateur" domain="[('is_examiner','=', True)]" />
+                            <field name="examinateur"  />
                             <field name="min_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
                             <field name="max_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
                             <field name="exam_center_id" domain="[('is_exam_center', '=', True)]"
                                     attrs="{'readonly': [('inscription_ids', '!=', [])]}" />
                         </group>
                     </group>
-                    <h3 class="mt-3 text-center"> Validation des Inscriptions </h3>
                     <notebook name="participants" string="Participants">
                         
-                        <page name="participant_edof" string="Participant Edof">
-                            <field name="participant_edof" domain="[('status','=','EXAM_TO_CONFIRM'), ('exam_session_id','!=',False), ('exam_session_id','=',id)]" 
-                                    options="{'no_create': True, 'no_update': True  }"
-                                    >
+                        <page name="participant_edof_page" string="Participants Edof">
+                            <field name="participant_edof"  options="{'no_create': True, 'no_update': True,}" >
                                 <tree >
-                                    <control>
+                                    <!-- <control>
                                         <create name="add_line_control" string="Ajouter une session" />
-                                    </control>
-                                    <field name="attendee_last_name" readonly="1"/>
-                                    <field name="attendee_first_name" readonly="1" />
+                                    </control> -->
+                                    <field name="attendee_last_name" />
+                                    <field name="attendee_first_name"  />
                                     <field name="attendee_email" />
                                     <field name="attendee_phone_number" />
                                     <field name="gender" />
@@ -57,15 +54,21 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
-                                    <field name="status" readonly="1"/>
-                                    <field name="folder_number" readonly="1" />
+                                    <field name="status"/>
+                                    <field name="folder_number"  />
+                                    <button name="validate_exam" string="Valider" type="object"
+                                            attrs="{'invisible': [('status','!=','EXAM_TO_CONFIRM')]}" />
+                                    <button name="cancel_exam" string="Annuler"  type="object"
+                                            attrs="{'invisible': [('status','!=','EXAM_TO_CONFIRM')]}" />
+                                    <button name="send_exam_convocation" string="Convoquer"  type="object"
+                                            attrs="{'invisible': [('status','!=','EXAM_SCHEDULED')]}"
+                                            help=" ${nbr_convocations} envoyé(s)" />
+                                    
                                 </tree>
                             </field>
                         </page>
-                        <page name="Participant_hors_CPF" string="Participant  hors CPF">
-                            <field name="participant_hors_cpf" domain="[('status','=','exam_to_confirm'), ('exam_session_id','!=',False), ('exam_session_id','=',id)]" 
-                                    options="{'no_create': True, 'no_update': True }" 
-                                    context="{'tree_view_ref' : 'exam__polylangue.dossier_list_reduct_view'}" >
+                        <page name="Participant_hors_CPF_page" string="Participant  hors CPF">
+                            <field name="participant_hors_cpf" options="{'no_create': True, 'no_update': True,}" >
                                 <tree >
                                     <field name="last_name" readonly="1" />
                                     <field name="first_name" readonly="1" />
@@ -77,8 +80,15 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
-                                    <field name="status" readonly="1" />
-                                    <field name="number" readonly="1" />
+                                    <field name="status" />
+                                    <field name="number"  />
+                                    <button name="validate_exam" string="Valider"  type="object"
+                                            attrs="{'invisible': [('status','!=','exam_to_confirm')]}" />
+                                    <button name="cancel_exam" string="Annuler"  type="object"
+                                            attrs="{'invisible': [('status','!=','exam_to_confirm')]}" />
+                                    <button name="send_exam_convocation" string="Convoquer" type="object"
+                                            attrs="{'invisible': [('status','!=','exam_scheduled')]}" 
+                                            help=" ${nbr_convocations} envoyé(s)"/>
                                 </tree>
                             
                             </field>
@@ -102,7 +112,7 @@
         <field name="arch" type="xml">
             <tree>
                 <field name="name" /> 
-                <field name="branch_id" />
+                <field name="responsable_id" />
                 <field name="date" />
                 <field name="status" />
                 <field name="nbr_cand" />

@@ -23,9 +23,14 @@ class inscription(models.Model):
 ]
 
     session_id = fields.Many2one("examen.session", required=True)
+
     participant_edof = fields.Many2many("edof.registration.folder", relation='inscription_participant_hors_cpf_rel')
     participant_hors_cpf = fields.Many2many("gestion.formation.dossier", relation='inscription_participant_edof_rel')
-    branch_id = fields.Many2one("res.branch", string="Agence", compute="_compute_branch", store=True)
+
+    responsable_id = fields.Many2one("res.users", string="Responsable", related='session_id.responsable_id', store=True)
+    branch_ids = fields.Many2many("res.branch", string="Branches", related='responsable_id.branch_ids',
+                                relation="inscription_branch_rel", column1="inscriptions", column2="branchs")
+    
     status = fields.Selection(selection=STATUS, compute="_compute_status", string='Etat', default='draft', store=True)
     # status_payment = fields.Selection(selection=STATUS, compute="_compute_status", string='Etat', default='draft', store=True)
     invoice_id = fields.Many2one('account.move', required=False, default=None)
@@ -39,14 +44,6 @@ class inscription(models.Model):
     def get_nbr_inscription_to_session(self):
         self.ensure_one()
         return self.session_id.get_nbr_inscription()
-
-    @api.depends('session_id')
-    def _compute_branch(self):
-        for record in self:
-            if record.session_id:
-                record.branch_id = record.session_id.branch_id
-            else:
-                record.branch_id = None
     
     
 
@@ -98,7 +95,7 @@ class inscription(models.Model):
     def _should_be_invoiced(self):
         self.ensure_one()
         not_invoiced_company_id = self._get_invoiced_company().id
-        if not_invoiced_company_id and not_invoiced_company_id == self.branch_id.company_id.id:
+        if not_invoiced_company_id and not_invoiced_company_id == self.responsable_id.branch_id.company_id.id:
             return False
 
         return True
@@ -117,20 +114,12 @@ class inscription(models.Model):
 
         for person in self.participant_edof:
             person.sudo().write({
-                'exam_date': self.session_id.date,
-                'time': self.session_id.time,
-                'exam_center_id': self.session_id.exam_center_id.id,
                 'status': 'EXAM_TO_CONFIRM',
-                'exam_session_id': self.session_id.id
             })
 
         for person in self.participant_hors_cpf:
             person.sudo().write({
-                'exam_date': self.session_id.date,
-                'time': self.session_id.time,
-                'exam_center_id': self.session_id.exam_center_id.id,
                 'status': 'exam_to_confirm',
-                'exam_session_id': self.session_id.id
             })
 
 
@@ -176,8 +165,8 @@ class inscription(models.Model):
         self.ensure_one()
         if not self.invoice_id:
             invoice_data = {
-                'partner_id': self.branch_id.company_id.partner_id.id, 
-                'branch_id': self.branch_id.id,
+                'partner_id': self.responsable_id.branch_id.company_id.partner_id.id, 
+                'branch_id': self.responsable_id.branch_id.id,
                 'move_type': 'out_invoice',
                 'invoice_date':fields.Date.today(),
                 'journal_id': self._get_default_journal().id
@@ -186,8 +175,8 @@ class inscription(models.Model):
                 self.invoice_id = self.env['account.move'].sudo().create(invoice_data)
             except Exception as e:
                 simalars_partner = self.env['res.partner'].sudo().search([
-                    ('name','=',self.branch_id.company_id.partner_id.name),
-                    ('id','!=',self.branch_id.company_id.partner_id.id),
+                    ('name','=',self.responsable_id.branch_id.company_id.partner_id.name),
+                    ('id','!=',self.responsable_id.branch_id.company_id.partner_id.id),
                     ('is_company','=',True)])
                 for partner in simalars_partner:
                     invoice_data['partner_id'] = partner.id
@@ -238,7 +227,8 @@ class inscription(models.Model):
 
     def button_confirm(self, confirm=False):
         self.ensure_one()
-        if self._check_participant_limits() and  self._check_required_info_for_inscription() and self.branch_id and self.branch_id.company_id:
+        print(f"=============== {self.responsable_id.branch_id } === {self.responsable_id.company_id:}")
+        if self._check_participant_limits() and  self._check_required_info_for_inscription() and self.responsable_id.branch_id and self.responsable_id.branch_id.company_id:
             if self._should_be_invoiced():
                 self._compute_invoice()
                 message = ""
@@ -271,6 +261,22 @@ class inscription(models.Model):
                     return False
                 insc._post_invoice()
             insc.status='confirm'
+            for person in self.participant_edof:
+                person.sudo().write({
+                    'exam_date': self.session_id.date,
+                    'time': self.session_id.time,
+                    'exam_center_id': self.session_id.exam_center_id.id,
+                    'exam_session_id': self.session_id.id
+                })
+
+            for person in self.participant_hors_cpf:
+                person.sudo().write({
+                    'exam_date': self.session_id.date,
+                    'time': self.session_id.time,
+                    'exam_center_id': self.session_id.exam_center_id.id,
+                    'exam_session_id': self.session_id.id
+                })
+
             self._validate_inscription()
                 
 

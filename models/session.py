@@ -1,4 +1,4 @@
-from odoo import fields, models, api
+from odoo import fields, models, api,_
 from datetime import datetime, timedelta
 
 
@@ -12,17 +12,26 @@ class Session(models.Model):
         ('close','Complet')
     ]
 
+    def get_responsable_list(self):
+        ids= self.env['res.groups'].sudo().search([("name","=","Responsable Agence")]).users.ids
+        print(f"====================== {ids}")
+        return ids
+    
+
     name = fields.Char("Libelé")
     date = fields.Date("Date de l'examen", required=True, tracking=True)
     time = fields.Float(string='Heure Examen', default="10.0", required=True, tracking=True)
     min_cand = fields.Integer("Nombre minimun de candidat", default=2, required=True)
     max_cand = fields.Integer("Nombre maximun de candidat", default=15, required=True)
-    branch_id = fields.Many2one(comodel_name="res.branch",string="Agence", required=True)
+
+    responsable_id = fields.Many2one(comodel_name="res.users",string="Responsable", required=True,
+                                     domain= lambda self: [('id', 'in', self.get_responsable_list())])
+    
     exam_center_id = fields.Many2one(comodel_name="res.branch", string="Lieu de l'examen", required=True)
-    examinateur = fields.Many2one("res.users",required=True)
+    examinateur = fields.Many2one("res.users",required=True, domain="[('is_examiner','=', True)]")
     examen_id = fields.Many2one("product.product",required=True)
     inscription_ids = fields.One2many(comodel_name='examen.inscription', inverse_name='session_id', default=False)
-    have_insc = fields.Boolean(compute="_compute_have_insc", store=True)
+
     status = fields.Selection(SESSION_STATES, default="open", store=True, compute="_compute_nbr_inscription",
                               tracking=True)
     nbr_cand = fields.Integer("Nombre d'inscriptions", compute="_compute_nbr_inscription", store=True, default=0)
@@ -32,8 +41,9 @@ class Session(models.Model):
     # cand_edof = fields.One2many(comodel_name="edof.registration.folder", inverse_name='exam_session_id')
     # cand_hcpf = fields.One2many(comodel_name="gestion.formation.dossier", inverse_name='exam_session_id')
     # candidats dont l'incription est valide
-    participant_edof = fields.Many2many("edof.registration.folder", relation='validation_participant_hors_cpf_rel')
-    participant_hors_cpf = fields.Many2many("gestion.formation.dossier", relation='validation_participant_edof_rel')
+    participant_edof = fields.One2many("edof.registration.folder", inverse_name="exam_session_id")
+    
+    participant_hors_cpf = fields.One2many("gestion.formation.dossier", inverse_name="exam_session_id")
 
 
     @api.model_create_multi
@@ -72,6 +82,12 @@ class Session(models.Model):
                     "message": "Vous ne pouriez pas creer des inscriptions a cette session car le nombre de jour entre la date d'aujourd'hui et la date de l'examen est inferieur au delay necessaire a la creation des inscriptions"
                 }}
     
+    @api.constrains('responsable_id')
+    def _check_default_branch(self):
+        for rec in self:
+            if not rec.responsable_id or not rec.responsable_id.branch_id:
+                raise models.ValidationError(_("Ce responsable n'a pas de branche par defaut cela pourrais pauser problème lors de l'inscription"))
+
     @api.constrains('time')
     def _check_time(self):
         for record in self:
@@ -80,12 +96,12 @@ class Session(models.Model):
 
 
 
-    @api.onchange('date','branch_id','examen_id')
+    @api.onchange('date','responsable_id','examen_id')
     def _on_session_attr_change(self):
-        if self.date and self.branch_id and self.branch_id:
-            other_session = self.env['examen.session'].sudo().search([('date','=',self.date),('branch_id','=',self.branch_id.id),('examen_id','=',self.examen_id.id)])
+        if self.date and self.responsable_id and self.examen_id:
+            other_session = self.env['examen.session'].sudo().search([('date','=',self.date),('responsable_id','=',self.responsable_id.id),('examen_id','=',self.examen_id.id)])
             if other_session:
-                raise models.ValidationError(f"Une session d'examen de '{self.examen_id.name}' a déjà été programmé à '{self.branch_id.name}' en date du '{self.date}' ")
+                raise models.ValidationError(f"Une session d'examen de '{self.examen_id.name}' a déjà été programmé pour '{self.responsable_id.name}' en date du '{self.date}' ")
 
     @api.depends('inscription_ids')
     def _compute_status(self):

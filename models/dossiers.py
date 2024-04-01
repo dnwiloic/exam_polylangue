@@ -29,7 +29,8 @@ class Dossier(models.Model):
         ('male', "Masculin"),
         ('female', "Feminin"),
     ]
-    exam_session_id = fields.Many2one('examen.session')
+
+    exam_session_id = fields.Many2one('examen.session', store=True, readonly=True)
     gender = fields.Selection(GENDER, string='genre')
     birth_day = fields.Date(string='date de naissance')
     nationality = fields.Many2one('res.country','Pays de nationalité')
@@ -42,16 +43,20 @@ class Dossier(models.Model):
 
     inscriptions = fields.Many2many("examen.inscription", relation='inscription_participant_edof_rel')
     last_annulation_day = fields.Date("Delay d'annulation se l'inscription", store=True, compute="_compute_last_annulation_day")
-
+    nbr_covocation = fields.Integer("Nombres de convocation envoyé", default=0)
 
     @api.model
     def _get_status_list(self):
         return self.STATUS
+    
 
     def send_exam_convocation(self):
         template = self.env.ref('exam_polylangue.email_template_exam_convocation_cpf')
         for rec in self:
             rec.message_post_with_template(template.id )
+            if not rec.nbr_covocation :
+                rec.nbr_covocation = 0
+            rec.nbr_covocation += 1
 
     def get_exam_name(self):
         return self.sudo().exam_session_id.examen_id.name
@@ -73,11 +78,16 @@ class Dossier(models.Model):
 
         return time_str
     
-    def cancel_ins(self):
+    def validate_exam(self):
         for rec in self:
-            if rec.last_annulation_day < datetime.datetime.now().date():
-                raise models.ValidationError('"Vous ne pouvez plus annuler cette inscription')
-        
+            if rec.status != 'exam_to_confirm':
+                raise models.ValidationError("Impossible de valider cette inscription")
+            else :
+                rec.status = 'exam_scheduled'
+                rec.send_exam_convocation()
+
+    def cancel_exam(self):
+        for rec in self:
             rec.inscriptions = [(6, 0, [x.id for x in rec.inscriptions if x.session_id !=  rec.exam_session_id])]
             rec.sudo().write({
                 'status': 'exam_to_reschedule',
@@ -86,6 +96,12 @@ class Dossier(models.Model):
                 'exam_center_id': None,
                 'exam_session_id': None
             })
+
+    def cancel_ins(self):
+        for rec in self:
+            if rec.last_annulation_day < datetime.datetime.now().date():
+                raise models.ValidationError('"Vous ne pouvez plus annuler cette inscription')
+            rec.cancel_exam()
             
 
     @api.depends('exam_session_id.date')

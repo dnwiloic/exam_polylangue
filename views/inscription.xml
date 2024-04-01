@@ -9,7 +9,7 @@
                 <field name="invoice_id" invisible="1"></field>
                 <header>
                     <button name="button_cancel" string="Annuler"
-                                confirm='Cette action est ireversible a {branch_id}. Voulez-vous vraiment annuler cette inscription ?'
+                                confirm='Cette action est ireversible. Voulez-vous vraiment annuler cette inscription ?'
                                 type="object" groups="exam_polylangue.exam_group_user" data-hotkey="v"
                                 attrs="{'invisible': [('status', '!=', 'draft')]}"/>
                      <button name="button_confirm" string="Confirmer" class="oe_highlight"
@@ -35,12 +35,13 @@
                         <field name="session_id" options="{'no_create': True, 'no_update': True}"
                                 attrs="{'readonly': [('status', '!=', 'draft')]}" 
                                 domain="[('status','=','open'),('last_inscription_day', '>=',  context_today().strftime('%Y-%m-%d 00:00:00'))]"/>
-                        <field name="branch_id" readonly="1"/>
+                        <field name="responsable_id" readonly="1"/>
+                        <field name="branch_ids" invisible="1"/>
                         <field name="status_paiment" readonly="1" attrs="{'invisible':  [('invoice_id', '=', False)]}" />
                    </group>
                     <notebook name="participants" string="Participants">
                         <page name="participant_EDOF_page" string="Participants Edof">
-                            <field name="participant_edof" domain="[('status','not in',['INTRAINING','EXAM_SCHEDULED','EXAM_TO_CONFIRM','ACCEPTED']), ('branch_id','=',branch_id)]" 
+                            <field name="participant_edof" domain="[('status','not in',['INTRAINING','EXAM_SCHEDULED','EXAM_TO_CONFIRM','ACCEPTED']), ('branch_id','in',branch_ids)]" 
                                     options="{'no_create': True, 'no_update': True  }"
                                     attrs="{'readonly': [('status', '!=', 'draft')]}" >
                                 <tree editable="top">
@@ -55,15 +56,15 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
-                                    <field name="exam_session_id" invisible="1"/>
+                                    <field name="status" invisible="1"/>
                                     <button name="cancel_ins" type="object" string="Reprogrammer" 
-                                            attrs="{'invisible': [('exam_session_id', '=', False)]}" 
+                                            attrs="{'invisible': [('status', '=', 'EXAM_TO_RESCHEDULE')]}" 
                                             confirm="Voulez-vous vraiment annuler cette inscription ?"/>
                                 </tree>
                             </field>
                         </page>
                         <page name="participant_hors_CPF" string="Participants hors CPF">
-                            <field name="participant_hors_cpf" domain="[('status','not in',['intraining','exam_sheduled','exam_to_confirm', 'accepted']),('branch_id','=',branch_id)]" 
+                            <field name="participant_hors_cpf" domain="[('status','not in',['intraining','exam_sheduled','exam_to_confirm', 'accepted']),('branch_id','in',branch_ids)]" 
                                     options="{'no_create': True, 'no_update': True }" 
                                     attrs="{'readonly': [('status', '!=', 'draft')]}" >
                                 <tree editable="top,bottom">
@@ -78,9 +79,9 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file"  />
-                                    <field name="exam_session_id"  invisible="1"/>
+                                    <field name="status"  invisible="1"/>
                                     <button name="cancel_ins" type="object" string="Reprogrammer" 
-                                            attrs="{'invisible': [('exam_session_id', '=', False)]}" 
+                                            attrs="{'invisible': [('status', '=', 'exam_to_reshedule')]}" 
                                             confirm="Voulez-vous vraiment annuler cette inscription ?"/>
                                     <!-- <field name="status" readonly="1" /> -->
                                 </tree>
@@ -100,7 +101,7 @@
         <field name="arch" type="xml">
             <tree>
                 <field name="session_id" />
-                <field name="branch_id" />
+                <field name="responsable_id" />
                 <field name="status" />
             </tree>
         </field>
