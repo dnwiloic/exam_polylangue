@@ -105,7 +105,7 @@ class Dossier(models.Model):
         for rec in self:
             rec.inscriptions = [(6, 0, [x.id for x in rec.inscriptions if x.session_id !=  rec.exam_session_id])]
             rec.sudo().write({
-                'status': 'exam_to_reshedule',
+                'status_exam': 'exam_to_reshedule',
                 'exam_date': None,
                 'time': None,
                 'exam_center_id': None,

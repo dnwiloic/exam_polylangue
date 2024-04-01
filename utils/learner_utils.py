@@ -13,7 +13,7 @@ MOTIVATIONS_LIST = [
         ('11', '11. Naturalisation suisse'),
         ('12', '12. Citoyenneté canadienne'),
         ('13', '13. Autre demande de nationalité'),
-        ('14', '14. Force Canadiennes'),
+        ('14', '14. Forces Canadiennes'),
         ('15', '15. Métiers de la sécurité en France'),
         ('16', '16. Professions médicales au canada'),
         ('17', '17. Autre motivation professionnzllz'),

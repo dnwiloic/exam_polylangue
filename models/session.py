@@ -82,11 +82,11 @@ class Session(models.Model):
                     "message": "Vous ne pouriez pas creer des inscriptions a cette session car le nombre de jour entre la date d'aujourd'hui et la date de l'examen est inferieur au delay necessaire a la creation des inscriptions"
                 }}
     
-    # @api.constrains('responsable_id')
-    # def _check_default_branch(self):
-    #     for rec in self:
-    #         if not rec.responsable_id or not rec.responsable_id.branch_id:
-    #             raise models.ValidationError(_("Ce responsable n'a pas de branche par defaut cela pourrais pauser problème lors de l'inscription"))
+    @api.constrains('responsable_id')
+    def _check_default_branch(self):
+        for rec in self:
+            if not rec.responsable_id or not rec.responsable_id.branch_id:
+                raise models.ValidationError(_("Ce responsable n'a pas de branche par defaut cela pourrais pauser problème lors de l'inscription"))
 
     @api.constrains('time')
     def _check_time(self):
@@ -167,11 +167,13 @@ class Session(models.Model):
         message = "<strong>Convocation envoyé à:</strong> <ul>"
         for rec in self:
             for p in rec.participant_edof:
-                p.send_exam_convocation()
-                message = f"{message} <li> <a ssss href='#id={p.id}&model=edof.registration.folder'><span>{p.attendee_first_name} {p.attendee_last_name}</span></a> </li>"
+                if p.status_exam == 'exam_sheduled':
+                    p.send_exam_convocation()
+                    message = f"{message} <li> <a ssss href='#id={p.id}&model=edof.registration.folder'><span>{p.attendee_first_name} {p.attendee_last_name}</span></a> </li>"
             for p in rec.participant_hors_cpf:
-                p.send_exam_convocation()
-                message = f"{message} <li><a  href='#id={p.id}&model=gestion.formation.dossier'><span>{p.first_name} {p.last_name}</span></a> </li>"
+                if p.status_exam == 'exam_sheduled':
+                    p.send_exam_convocation()
+                    message = f"{message} <li><a  href='#id={p.id}&model=gestion.formation.dossier'><span>{p.first_name} {p.last_name}</span></a> </li>"
             message = f"{message} </ul>"
             self.message_post(body=message,
                               subject="Convocation a l'examen")

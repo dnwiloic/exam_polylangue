@@ -41,7 +41,7 @@
                    </group>
                     <notebook name="participants" string="Participants">
                         <page name="participant_EDOF_page" string="Participants Edof">
-                            <field name="participant_edof" domain="[('status','not in',['INTRAINING','EXAM_SCHEDULED','EXAM_TO_CONFIRM','ACCEPTED']), ('branch_id','in',branch_ids)]" 
+                            <field name="participant_edof" domain="[('status','not in',['INTRAINING','EXAM_SCHEDULED','EXAM_TO_CONFIRM','ACCEPTED']),('status_exam','in',['none','exam_to_reshedule']), ('branch_id','in',branch_ids)]" 
                                     options="{'no_create': True, 'no_update': True  }"
                                     attrs="{'readonly': [('status', '!=', 'draft')]}" >
                                 <tree editable="top">
@@ -64,7 +64,7 @@
                             </field>
                         </page>
                         <page name="participant_hors_CPF" string="Participants hors CPF">
-                            <field name="participant_hors_cpf" domain="[('status','not in',['intraining','exam_sheduled','exam_to_confirm', 'accepted']),('branch_id','in',branch_ids)]" 
+                            <field name="participant_hors_cpf" domain="[('status','not in',['intraining','exam_sheduled','exam_to_confirm', 'accepted']),('status_exam','in',['none','exam_to_reshedule']),('branch_id','in',branch_ids)]" 
                                     options="{'no_create': True, 'no_update': True }" 
                                     attrs="{'readonly': [('status', '!=', 'draft')]}" >
                                 <tree editable="top,bottom">
