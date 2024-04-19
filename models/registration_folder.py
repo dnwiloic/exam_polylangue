@@ -53,7 +53,7 @@ class RegistrationFolder(models.Model):
     )
     status_exam = fields.Selection(learner_utils.STATUS_EXAM, default="none")
     status = fields.Selection(selection=_get_status_list, string='Statut',
-                              default='ACCEPTED', tracking=True, readonly=False,
+                              default='ACCEPTED', tracking=True, readonly=False, store=True, 
                               compute="_compute_status")
     
     inscriptions = fields.Many2many("examen.inscription", relation='inscription_participant_hors_cpf_rel')

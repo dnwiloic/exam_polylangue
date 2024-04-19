@@ -57,10 +57,13 @@
                                     <field name="status_exam"/>
                                     <field name="folder_number"  />
                                     <button name="validate_exam" string="Valider" type="object"
+                                            groups="exam_polylangue.exam_group_manager"
                                             attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
                                     <button name="cancel_exam" string="Rejeter"  type="object"
+                                            groups="exam_polylangue.exam_group_manager"
                                             attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
                                     <button name="send_exam_convocation" string="Convoquer"  type="object"
+                                            groups="exam_polylangue.exam_group_manager"
                                             attrs="{'invisible': [('status_exam','!=','exam_sheduled')]}"
                                             help=" ${nbr_convocations} envoyé(s)" />
                                     
@@ -83,10 +86,13 @@
                                     <field name="status_exam" />
                                     <field name="number"  />
                                     <button name="validate_exam" string="Valider"  type="object"
+                                            groups="exam_polylangue.exam_group_manager"
                                             attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
                                     <button name="cancel_exam" string="Rejeter"  type="object"
+                                            groups="exam_polylangue.exam_group_manager"
                                             attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
                                     <button name="send_exam_convocation" string="Convoquer" type="object"
+                                            groups="exam_polylangue.exam_group_manager"
                                             attrs="{'invisible': [('status_exam','!=','exam_sheduled')]}" 
                                             help=" ${nbr_convocations} envoyé(s)"/>
                                 </tree>
