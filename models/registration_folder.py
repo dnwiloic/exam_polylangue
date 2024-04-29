@@ -74,10 +74,21 @@ class RegistrationFolder(models.Model):
     def send_exam_convocation(self):
         template = self.env.ref('exam_polylangue.email_template_exam_convocation_edof')
         for rec in self:
-            rec.sudo().message_post_with_template(template.id )
+            result_mails_su, result_messages = rec.sudo().message_post_with_template(template.id )
+
             if not rec.nbr_covocation :
                 rec.nbr_covocation = 0
             rec.nbr_covocation += 1
+
+            if not rec.convocation_id:
+                rec.convocation_id = self.env['convocation.history'].create({})
+            rec.convocation_id.add_convocation_line({
+                'date': datetime.datetime.now(),
+                'way': 'email',
+                'reason': 'Convocation a un examen',
+                'message_id': result_messages.id,
+                # 'convocation_id': rec.id
+            })
 
     def get_exam_time(self):
         # Convertir le float en secondes
