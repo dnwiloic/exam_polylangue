@@ -7,7 +7,7 @@
     'website': "https://digitalexpertize.com",
     'category': 'Uncategorized',
     'version': '16.0.1',
-    'depends': ['base', 'account', 'gestion_formation','edof_data', 'convocation_history'],
+    'depends': ['base', 'account','web', 'gestion_formation','edof_data', 'convocation_history'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
@@ -22,7 +22,11 @@
         'data/convocation_mail_template_cpf.xml',
         'data/convocation_mail_template_edof.xml',
         'data/mail_template_data.xml',
-        'data/product_template.xml'
+        'data/product_template.xml',
+        'template/convocation_mail.xml',
+        'report/convocation_mail_template_cpf.xml',
+        'report/convocation_mail_template_edof.xml',
+        'report/actions.xml',
     ],
     "license": "OPL-1",
     'installable': True,

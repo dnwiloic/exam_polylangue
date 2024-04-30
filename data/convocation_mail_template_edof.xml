@@ -11,50 +11,12 @@
             <field name="subject">Convocation au Test {{ object.company_id.name or 'n/a' }}</field>
             <field name="description">Envoyé après validation de l'incription du Stagiaire à une session d'examen</field>
             <field name="body_html" type="html">
-                <div style="margin: 0px; padding: 0px;">
-                    <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;">
-                        Bonjour 
-                        <t t-if="object.attendee_first_name">
-                            <t t-out="object.attendee_first_name or ''">Brandon</t>
-                            <t t-out="object.attendee_last_name or''">Freeman</t>,
-                        </t>
-    
-                        <br/><br/>
-                        Nous sommes heureux de vous confirmer votre inscription à la session de Test:
-                        <t t-if="object and object.exam_session_id">
-                            <t t-out="object.exam_session_id.examen_id.name"/> <br/>
-                            à <t t-out="object.exam_session_id.exam_center_id.city or ''"/>, <t t-out="object.exam_session_id.exam_center_id.street or object.exam_session_id.exam_center_id.street2 or ''"/> <br/>
-                            le <t t-out="object.exam_session_id.date"/> <br/>
-                            à <t t-out="object.get_exam_time()"/> <br/>
-                        </t>
-                        <br/><br/>
-                        En cas d'indisponibilité ou de renoncement, veuillez nous prévenir le plus rapidement possible (48h avant) à l'adresse suivante: <t t-out="object.training_center_id.email"/>
-                        <br/><br/>
-                        Pour une annulation dans un délai inférieur, le cours sera considéré comme pris et nous vous demanderons de signer la feuille d'émargement correspondante.
-                         <br/><br/>
-                        Vous devez impérativement nous fournir par mail avant le test :<br/>
-                        La copie recto-verso de votre pièce d’identité en cours de validité avec photo et signature. (Carte d’identité, passeport, permis de conduire ou carte de militaire). (L’avoir avec vous également le jour du test)
-                        Attention ! A défaut de présentation de pièce d’identité ou de retard, nous serons obligés de vous refuser l’accès au test.
-                        <br/> <br/>
-                        Vos résultats seront envoyés par courrier / email, à l’adresse indiquée lors de votre inscription.
-                         <br/> <br/>
-                        Aucun résultat ne sera transmis par téléphone.
-                         <br/> <br/> <br/>
-                        Nous restons à votre disposition pour toute information complémentaire. 
-                        <br/> <br/>
-                        
-                       
-                    </p>
-                    <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;">Bien cordialement,
-                        <t t-out="object.company_id.partner_id.name"/>   <t t-out="object.branch_id.name"/>
-                    </p>
-                    <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;"><br/></p>
-                </div>
+                <t t-call="exam_polylangue.comvocation_exam_edof_template"/>
             </field>
-            <!-- <field name="report_template" ref="account.account_invoices"/> -->
-            <!-- <field name="report_name">Invoices_{{ (object.name or '').replace('/','_') }}{{ object.state == 'draft' and '_draft' or '' }}</field> -->
-            <!-- <field name="lang">{{ object.company_id.lang }}</field> -->
-            <field name="auto_delete" eval="True"/>
+            <field name="report_template" ref="exam_polylangue.action_exam_convocation_edof"/>
+            <field name="report_name">Covocation_examen_{{ (object.attendee_first_name or '') }}</field>
+            <field name="lang"></field>
+            <field name="auto_delete" eval="False"/>
         </record>
     
     </data>

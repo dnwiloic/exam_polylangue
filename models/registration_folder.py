@@ -90,6 +90,37 @@ class RegistrationFolder(models.Model):
                 # 'convocation_id': rec.id
             })
 
+            subject = "Convocation a un examen"
+            address = "{} {} {}".format(rec.exam_center_id.street,rec.exam_center_id.zip , rec.exam_center_id.city)
+                
+            phone = phonenumbers.format_number(phonenumbers.parse(rec.attendee_phone_number, 'IT'), phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+            
+            time_string = f"{int(rec.time)}:{int((rec.time - int(rec.time)) * 60):02d}:00"
+            message = f""" Bonjour {rec.attendee_first_name} {rec.attendee_last_name},
+            Nous sommes heureux de vous confirmer votre inscription à la session d'Examen: de {rec.exam_session_id.examen_id.name} qui se tiiendra le {rec.exam_date} {time_string} a {address}.
+
+            En cas d'indisponibilité ou de renoncement, veuillez nous prévenir le plus rapidement possible (48h avant) à l'adresse suivante: {rec.training_center_id.email} oou au {rec.exam_center_id.phone}
+            Pour une annulation dans un délai inférieur, le cours sera considéré comme pris et nous vous demanderons de signer la feuille d'émargement correspondante.
+               
+            Vous devez impérativement nous fournir par mail avant le test :<br/>
+            La copie recto-verso de votre pièce d’identité en cours de validité avec photo et signature. (Carte d’identité, passeport, permis de conduire ou carte de militaire). (L’avoir avec vous également le jour du test)
+            Attention ! A défaut de présentation de pièce d’identité ou de retard, nous serons obligés de vous refuser l’accès au test.
+            
+            Vos résultats seront envoyés par courrier / email, à l’adresse indiquée lors de votre inscription.
+               
+            Aucun résultat ne sera transmis par téléphone.
+                
+            Nous restons à votre disposition pour toute information complémentaire.
+
+            
+            Bien cordialement, {rec.company_id.partner_id.name}
+            
+            """
+            rec.convocation_id.send_sms_convocation(phone, subject,message  )
+
+
+    
+
     def get_exam_time(self):
         # Convertir le float en secondes
         float_value = self.time
