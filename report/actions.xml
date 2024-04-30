@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_exam_convocation_cpf" model="ir.actions.report">
+        <field name="name">Examen/ Convocations</field>
+        <field name="model">gestion.formation.dossier</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">exam_polylangue.report_exam_convocation_cpf</field>
+        <field name="report_file">exam_polylangue.report_exam_convocation_cpf</field>
+        <field name="print_report_name">'Convocation examen - %s' % (object.first_name)</field>
+        <field name="binding_model_id" ref="model_gestion_formation_dossier"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_exam_convocation_edof" model="ir.actions.report">
+        <field name="name">Examen/ Convocations</field>
+        <field name="model">edof.registration.folder</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">exam_polylangue.report_exam_convocation_edof</field>
+        <field name="report_file">exam_polylangue.report_exam_convocation_edof</field>
+        <field name="print_report_name">'Convocation examen - %s' % (object.attendee_first_name)</field>
+        <field name="binding_model_id" ref="model_edof_registration_folder"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

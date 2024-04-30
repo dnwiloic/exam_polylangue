@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="comvocation_exam_hors_cpf_template" name="Convocation exam Hors cpf">
+        
+        <div style="margin: 0px; padding: 0px;">
+            <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;">
+                Bonjour 
+                <t t-if="object.first_name">
+                    <t t-out="object.first_name or ''">Brandon</t>
+                    <t t-out="object.last_name or ''"> Freeman</t>,
+                </t>
+                <br/><br/>
+                Nous sommes heureux de vous confirmer votre inscription à la session de Test:<br />
+                <t t-if="object and object.exam_session_id">
+                    <t t-out="object.exam_session_id.examen_id.name"/> <br/>
+                    à <t t-out="object.exam_session_id.exam_center_id.city or ''"/> , <t t-out="object.exam_session_id.exam_center_id.street or object.exam_session_id.exam_center_id.street2 or ''"/> <br/>
+                    le <t t-out="object.exam_session_id.date"/> <br/>
+                    à <t t-out="object.get_exam_time()"/> <br/>
+                </t>
+                <br/><br/>
+                En cas d'indisponibilité ou de renoncement, veuillez nous prévenir le plus rapidement possible (48h avant) à l'adresse suivante: <t t-out="object.training_center_id.email"/>
+                <br/><br/>
+                Pour une annulation dans un délai inférieur, le cours sera considéré comme pris et nous vous demanderons de signer la feuille d'émargement correspondante.
+                    <br/><br/>
+                Vous devez impérativement nous fournir par mail avant le test :<br/>
+                La copie recto-verso de votre pièce d’identité en cours de validité avec photo et signature. (Carte d’identité, passeport, permis de conduire ou carte de militaire). (L’avoir avec vous également le jour du test)
+                Attention ! A défaut de présentation de pièce d’identité ou de retard, nous serons obligés de vous refuser l’accès au test.
+                <br/> <br/>
+                Vos résultats seront envoyés par courrier / email, à l’adresse indiquée lors de votre inscription.
+                    <br/> <br/>
+                Aucun résultat ne sera transmis par téléphone.
+                    <br/> <br/> <br/>
+                Nous restons à votre disposition pour toute information complémentaire. 
+                <br/> <br/>
+                
+                
+            </p>
+            <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;">Bien cordialement,
+                <t t-out="object.company_id.partner_id.name"/>   <t t-out="object.branch_id.name"/>
+            </p>
+            <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;"><br/></p>
+        </div>
+    </template>
+
+    <template id="comvocation_exam_edof_template" name="Convocation exam Hors cpf">
+        
+        <div style="margin: 0px; padding: 0px;">
+            <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;">
+                Bonjour 
+                <t t-if="object.attendee_first_name">
+                    <t t-out="object.attendee_first_name or ''">Brandon</t>
+                    <t t-out="object.attendee_last_name or''">Freeman</t>,
+                </t>
+
+                <br/><br/>
+                Nous sommes heureux de vous confirmer votre inscription à la session d'Examen:
+                <t t-if="object and object.exam_session_id">
+                    <t t-out="object.exam_session_id.examen_id.name"/> <br/>
+                    à <t t-out="object.exam_session_id.exam_center_id.city or ''"/>, <t t-out="object.exam_session_id.exam_center_id.street or object.exam_session_id.exam_center_id.street2 or ''"/> <br/>
+                    le <t t-out="object.exam_session_id.date"/> <br/>
+                    à <t t-out="object.get_exam_time()"/> <br/>
+                </t>
+                <br/><br/>
+                En cas d'indisponibilité ou de renoncement, veuillez nous prévenir le plus rapidement possible (48h avant) à l'adresse suivante: <t t-out="object.training_center_id.email"/>
+                <br/><br/>
+                Pour une annulation dans un délai inférieur, le cours sera considéré comme pris et nous vous demanderons de signer la feuille d'émargement correspondante.
+                    <br/><br/>
+                Vous devez impérativement nous fournir par mail avant le test :<br/>
+                La copie recto-verso de votre pièce d’identité en cours de validité avec photo et signature. (Carte d’identité, passeport, permis de conduire ou carte de militaire). (L’avoir avec vous également le jour du test)
+                Attention ! A défaut de présentation de pièce d’identité ou de retard, nous serons obligés de vous refuser l’accès au test.
+                <br/> <br/>
+                Vos résultats seront envoyés par courrier / email, à l’adresse indiquée lors de votre inscription.
+                    <br/> <br/>
+                Aucun résultat ne sera transmis par téléphone.
+                    <br/> <br/> <br/>
+                Nous restons à votre disposition pour toute information complémentaire.
+                <br/> <br/>
+                
+                
+            </p>
+            <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;">Bien cordialement,
+                <t t-out="object.company_id.partner_id.name"/>   <t t-out="object.branch_id.name"/>
+            </p>
+            <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;"><br/></p>
+        </div>
+    </template>
+
+</odoo>

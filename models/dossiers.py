@@ -51,7 +51,12 @@ class Dossier(models.Model):
     last_annulation_day = fields.Date("Delay d'annulation se l'inscription", store=True, compute="_compute_last_annulation_day")
     nbr_covocation = fields.Integer("Nombres de convocation envoyé", default=0)
 
-    
+    convocation_id = fields.Many2one(
+                        'convocation.history',
+                        delegate=True,
+                        ondelete="cascade",
+                        default=lambda self: self.env['convocation.history'].sudo().create({})
+                        )
     
     @api.depends("status_exam")
     def _compute_status(self):
@@ -67,10 +72,56 @@ class Dossier(models.Model):
     def send_exam_convocation(self):
         template = self.env.ref('exam_polylangue.email_template_exam_convocation_cpf')
         for rec in self:
-            rec.message_post_with_template(template.id )
+            result_mails_su, result_messages = rec.message_post_with_template(template.id )
+
             if not rec.nbr_covocation :
                 rec.nbr_covocation = 0
             rec.nbr_covocation += 1
+
+            if not rec.convocation_id:
+                rec.convocation_id = self.env['convocation.history'].create({})
+            rec.convocation_id.add_convocation_line({
+                'date': datetime.datetime.now(),
+                'way': 'email',
+                'reason': 'Convocation a un examen',
+                'message_id': result_messages.id,
+                # 'convocation_id': rec.id
+            })
+
+            subject = "Convocation a un examen"
+            address = "{} {} {}".format(rec.exam_center_id.street,rec.exam_center_id.zip , rec.exam_center_id.city)
+                
+            phone = phonenumbers.format_number(phonenumbers.parse(rec.phone, 'IT'), phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+            
+            time_string = f"{int(rec.time)}:{int((rec.time - int(rec.time)) * 60):02d}:00"
+            message = f""" Bonjour {rec.first_name} {rec.last_name},
+            Nous sommes heureux de vous confirmer votre inscription à la session d'Examen: de {rec.exam_session_id.examen_id.name} qui se tiiendra le {rec.exam_date} {time_string} a {address}.
+
+            En cas d'indisponibilité ou de renoncement, veuillez nous prévenir le plus rapidement possible (48h avant) à l'adresse suivante: {rec.training_center_id.email} oou au {rec.exam_center_id.phone}
+            Pour une annulation dans un délai inférieur, le cours sera considéré comme pris et nous vous demanderons de signer la feuille d'émargement correspondante.
+               
+            Vous devez impérativement nous fournir par mail avant le test :<br/>
+            La copie recto-verso de votre pièce d’identité en cours de validité avec photo et signature. (Carte d’identité, passeport, permis de conduire ou carte de militaire). (L’avoir avec vous également le jour du test)
+            Attention ! A défaut de présentation de pièce d’identité ou de retard, nous serons obligés de vous refuser l’accès au test.
+            
+            Vos résultats seront envoyés par courrier / email, à l’adresse indiquée lors de votre inscription.
+               
+            Aucun résultat ne sera transmis par téléphone.
+                
+            Nous restons à votre disposition pour toute information complémentaire.
+
+            
+            Bien cordialement, {rec.company_id.partner_id.name}
+            
+            """
+            rec.convocation_id.send_sms_convocation(phone, subject,message  )
+
+    def action_view_convocation(self):
+        self.ensure_one()
+        if not self.convocation_id :  
+            self.convocation_id = self.env['convocation.history'].create({})
+        print(f" ====== {self.convocation_id}")
+        return self.convocation_id.action_view_convocation()
 
     def get_exam_name(self):
         return self.sudo().exam_session_id.examen_id.name
