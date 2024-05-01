@@ -56,7 +56,9 @@ class Dossier(models.Model):
                         'convocation.history',
                         delegate=True,
                         ondelete="cascade",
-                        default=lambda self: self.env['convocation.history'].sudo().create({})
+                        default=lambda self: self.env['convocation.history'].sudo().create({}),
+                        compute="_compute_convocation",
+                        store=True
                         )
     
     @api.depends("status_exam")
@@ -73,21 +75,11 @@ class Dossier(models.Model):
     def send_exam_convocation(self):
         template = self.env.ref('exam_polylangue.email_template_exam_convocation_cpf')
         for rec in self:
-            result_mails_su, result_messages = rec.message_post_with_template(template.id )
+            rec.message_post_with_template(template.id )
 
             if not rec.nbr_covocation :
                 rec.nbr_covocation = 0
             rec.nbr_covocation += 1
-
-            if not rec.convocation_id:
-                rec.convocation_id = self.env['convocation.history'].create({})
-            rec.convocation_id.add_convocation_line({
-                'date': datetime.datetime.now(),
-                'way': 'email',
-                'reason': 'Convocation a un examen',
-                'message_id': result_messages.id,
-                # 'convocation_id': rec.id
-            })
 
             subject = "Convocation a un examen"
             address = "{} {} {}".format(rec.exam_center_id.street,rec.exam_center_id.zip , rec.exam_center_id.city)
@@ -116,6 +108,24 @@ class Dossier(models.Model):
             
             """
             rec.convocation_id.send_sms_convocation(phone, subject,message  )
+
+    @api.depends("message_ids")
+    def _compute_convocation(self):
+        for rec in self:
+            if not rec.convocation_id:
+                rec.convocation_id = self.env['convocation.history'].create({})
+            
+            for message in rec.message_ids:
+                if isinstance(message.subject, str) and "convocation" in message.subject.lower() and \
+                    message.id not in rec.convocation_id.convocation_lines.message_id:
+
+                        rec.convocation_id.add_convocation_line({
+                            'date': message.date,
+                            'way': 'email',
+                            'reason': message.subject,
+                            'message_id': message.id,
+                            # 'convocation_id': rec.id
+                        })
 
     def action_view_convocation(self):
         self.ensure_one()
