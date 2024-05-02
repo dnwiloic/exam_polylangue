@@ -7,8 +7,8 @@
         <field name="inherit_id" ref="gestion_formation.dossier_form_view" />
         <field name="arch" type="xml">
             <xpath expr="//button[@name='action_view_invoice']" position="before">
-                <button class="oe_stat_button" type="object" name="action_view_convocation" icon="fa-pencil-square-o">
-                    <field name="convocation_count" widget="statinfo" string="Convocation"/>
+                <button class="oe_stat_button" type="object" name="action_view_convocation" icon="fa-calendar-check-o">
+                    <field name="convocation_count" widget="statinfo" string="Convocations"/>
                 </button>
             </xpath>
         </field>
