@@ -4,6 +4,9 @@
     <template id="comvocation_exam_hors_cpf_template" name="Convocation exam Hors cpf">
         
         <div style="margin: 0px; padding: 0px;">
+            <div class="text-end py-2" >
+                Emit le <span class="fw-bold" t-esc="datetime.datetime.now().strftime('%d/%m/%Y')" />
+            </div>
             <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;">
                 Bonjour 
                 <t t-if="object.first_name">
@@ -14,18 +17,28 @@
                 Nous sommes heureux de vous confirmer votre inscription à la session de Test:<br />
                 <t t-if="object and object.exam_session_id">
                     <t t-out="object.exam_session_id.examen_id.name"/> <br/>
-                    à <t t-out="object.exam_session_id.exam_center_id.city or ''"/> , <t t-out="object.exam_session_id.exam_center_id.street or object.exam_session_id.exam_center_id.street2 or ''"/> <br/>
+                    à 
+                        <t t-out="object.exam_session_id.exam_center_id.street or ''" /> 
+                        <t t-out="object.exam_session_id.exam_center_id.zip or ''" /> 
+                        <t t-out="object.exam_session_id.exam_center_id.city or ''" />  <br/>
+
                     le <t t-out="object.exam_session_id.date"/> <br/>
                     à <t t-out="object.get_exam_time()"/> <br/>
                 </t>
                 <br/><br/>
                 En cas d'indisponibilité ou de renoncement, veuillez nous prévenir le plus rapidement possible (48h avant) à l'adresse suivante: <t t-out="object.training_center_id.email"/>
                 <br/><br/>
-                Pour une annulation dans un délai inférieur, le cours sera considéré comme pris et nous vous demanderons de signer la feuille d'émargement correspondante.
+                Pour une annulation dans un délai inférieur, l'examen sera considéré comme pris et aucun rembourssement ne sera possible.
                     <br/><br/>
                 Vous devez impérativement nous fournir par mail avant le test :<br/>
-                La copie recto-verso de votre pièce d’identité en cours de validité avec photo et signature. (Carte d’identité, passeport, permis de conduire ou carte de militaire). (L’avoir avec vous également le jour du test)
-                Attention ! A défaut de présentation de pièce d’identité ou de retard, nous serons obligés de vous refuser l’accès au test.
+                <ul>
+                    <li>
+                        La copie recto-verso de votre pièce d’identité en cours de validité avec photo et signature. (Carte d’identité, passeport, permis de conduire ou carte de militaire). (L’avoir avec vous également le jour du test)
+                    </li>
+                    <li>
+                        Attention ! A défaut de présentation de pièce d’identité ou de retard, nous serons obligés de vous refuser l’accès au test.
+                    </li>
+                </ul>
                 <br/> <br/>
                 Vos résultats seront envoyés par courrier / email, à l’adresse indiquée lors de votre inscription.
                     <br/> <br/>
@@ -46,6 +59,9 @@
     <template id="comvocation_exam_edof_template" name="Convocation exam Hors cpf">
         
         <div style="margin: 0px; padding: 0px;">
+            <div class="text-end py-2" >
+                Emit le <span class="fw-bold" t-esc="datetime.datetime.now().strftime('%d/%m/%Y')" />
+            </div>
             <p style="box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;">
                 Bonjour 
                 <t t-if="object.attendee_first_name">
@@ -56,10 +72,15 @@
                 <br/><br/>
                 Nous sommes heureux de vous confirmer votre inscription à la session d'Examen:
                 <t t-if="object and object.exam_session_id">
-                    <t t-out="object.exam_session_id.examen_id.name"/> <br/>
-                    à <t t-out="object.exam_session_id.exam_center_id.city or ''"/>, <t t-out="object.exam_session_id.exam_center_id.street or object.exam_session_id.exam_center_id.street2 or ''"/> <br/>
-                    le <t t-out="object.exam_session_id.date"/> <br/>
-                    à <t t-out="object.get_exam_time()"/> <br/>
+                    <strong> <t t-out="object.exam_session_id.examen_id.name"/> </strong> <br/>
+                    à <strong>
+                        <t t-out="object.exam_session_id.exam_center_id.street or ''" /> 
+                        <t t-out="object.exam_session_id.exam_center_id.zip or ''" /> 
+                        <t t-out="object.exam_session_id.exam_center_id.city or ''" />
+                        </strong>
+                     <br/>
+                    le <strong> <t t-out="object.exam_session_id.date"/> </strong> <br/>
+                    à <strong> <t t-out="object.get_exam_time()"/> </strong> <br/>
                 </t>
                 <br/><br/>
                 En cas d'indisponibilité ou de renoncement, veuillez nous prévenir le plus rapidement possible (48h avant) à l'adresse suivante: <t t-out="object.training_center_id.email"/>
@@ -67,8 +88,14 @@
                 Pour une annulation dans un délai inférieur, le cours sera considéré comme pris et nous vous demanderons de signer la feuille d'émargement correspondante.
                     <br/><br/>
                 Vous devez impérativement nous fournir par mail avant le test :<br/>
-                La copie recto-verso de votre pièce d’identité en cours de validité avec photo et signature. (Carte d’identité, passeport, permis de conduire ou carte de militaire). (L’avoir avec vous également le jour du test)
-                Attention ! A défaut de présentation de pièce d’identité ou de retard, nous serons obligés de vous refuser l’accès au test.
+                <ul>
+                    <li>
+                        La copie recto-verso de votre pièce d’identité en cours de validité avec photo et signature. (Carte d’identité, passeport, permis de conduire ou carte de militaire). (L’avoir avec vous également le jour du test)
+                    </li>
+                    <li>
+                        Attention ! A défaut de présentation de pièce d’identité ou de retard, nous serons obligés de vous refuser l’accès au test.
+                    </li>
+                </ul>
                 <br/> <br/>
                 Vos résultats seront envoyés par courrier / email, à l’adresse indiquée lors de votre inscription.
                     <br/> <br/>

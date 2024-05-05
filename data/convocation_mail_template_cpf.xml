@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <data>
+    <data noupdate="1">
         <!--Email template noupdate="0"-->
         <record id="email_template_exam_convocation_cpf" model="mail.template">
             <field name="name">Stagiaire : Convocation au Test de fin de formation pour candidats hors CPF</field>
