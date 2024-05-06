@@ -29,7 +29,6 @@
                             <field name="responsable_id" attrs="{'readonly': [('inscription_ids', '!=', [])]}" />
                         </group>
                         <group>
-                            <field name="examinateur"  />
                             <field name="min_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
                             <field name="max_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
                             <field name="exam_center_id" domain="[('is_exam_center', '=', True)]"

@@ -28,7 +28,6 @@ class Session(models.Model):
                                      domain= lambda self: f"[('id', 'in', {self.get_responsable_list()})]")
     
     exam_center_id = fields.Many2one(comodel_name="res.branch", string="Lieu de l'examen", required=True)
-    examinateur = fields.Many2one("res.users",required=True, domain="[('is_examiner','=', True)]")
     examen_id = fields.Many2one("product.product",required=True)
     inscription_ids = fields.One2many(comodel_name='examen.inscription', inverse_name='session_id', default=False)
 

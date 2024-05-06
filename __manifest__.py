@@ -15,7 +15,6 @@
         'views/inscription.xml',
         'views/session.xml',
         'views/dossier_view.xml',
-        'views/res_user_view.xml',
         'views/res_config_settings_views.xml',
         'views/product_view.xml',
         'views/res_branch_view.xml',
