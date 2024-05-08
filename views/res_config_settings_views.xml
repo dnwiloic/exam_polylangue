@@ -20,13 +20,16 @@
                                     <span class="o_form_label">Programmation des examens</span>
                                     <!-- <span class="fa fa-lg fa-note-o" title="Values set here are company-specific." aria-label="Values set here are company-specific." groups="base.group_multi_company" role="img"/> -->
                                     <div class="text-muted">
-                                        Ceci est appliqué a toute les future sessions qui serons créé
+                                        Ceci est appliqué a toute les futures sessions qui serons créé
                                     </div>
                                     <div class="content-group">
                                         <group >
                                             <!-- <field name="limited_day_before_exam_session"/> -->
                                             <field name="nbr_day_before_exam_incription" />
                                             <field name="nbr_day_before_exam_annulation" />
+
+                                            <field name="min_cand" />
+                                            <field name="max_cand" />
                                         </group>
 
                                         <!-- <div class="row mt16">

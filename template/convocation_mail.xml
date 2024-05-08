@@ -74,9 +74,9 @@
                 <t t-if="object and object.exam_session_id">
                     <strong> <t t-out="object.exam_session_id.examen_id.name"/> </strong> <br/>
                     à <strong>
-                        <t t-out="object.exam_session_id.exam_center_id.street or ''" /> 
-                        <t t-out="object.exam_session_id.exam_center_id.zip or ''" /> 
-                        <t t-out="object.exam_session_id.exam_center_id.city or ''" />
+                        <t t-out="object.exam_center_id.street or ''" /> 
+                        <t t-out="object.exam_center_id.zip or ''" /> 
+                        <t t-out="object.exam_center_id.city or ''" />
                         </strong>
                      <br/>
                     le <strong> <t t-out="object.exam_session_id.date"/> </strong> <br/>

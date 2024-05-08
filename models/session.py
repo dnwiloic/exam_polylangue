@@ -14,15 +14,18 @@ class Session(models.Model):
 
     def get_responsable_list(self):
         ids= self.env['res.groups'].sudo().search([("name","=","Responsable Agence")]).users.ids
-        print(f"====================== {ids}")
         return ids
     
 
     name = fields.Char("Libelé")
     date = fields.Date("Date de l'examen", required=True, tracking=True)
     time = fields.Float(string='Heure Examen', default="10.0", required=True, tracking=True)
-    min_cand = fields.Integer("Nombre minimun de candidat", default=2, required=True)
-    max_cand = fields.Integer("Nombre maximun de candidat", default=15, required=True)
+    min_cand = fields.Integer("Nombre minimun de candidat", 
+                              default= lambda self: self.env['ir.config_parameter'].sudo().get_param("exam_polylangue.default_min_cand"), 
+                              required=True)
+    max_cand = fields.Integer("Nombre maximun de candidat",
+                              default= lambda self: self.env['ir.config_parameter'].sudo().get_param("exam_polylangue.default_max_cand"),
+                              required=True)
 
     responsable_id = fields.Many2one(comodel_name="res.users",string="Responsable", required=True,
                                      domain= lambda self: f"[('id', 'in', {self.get_responsable_list()})]")
@@ -42,8 +45,13 @@ class Session(models.Model):
     # candidats dont l'incription est valide
     participant_edof = fields.One2many("edof.registration.folder", inverse_name="exam_session_id")
     
+    
     participant_hors_cpf = fields.One2many("gestion.formation.dossier", inverse_name="exam_session_id")
+    # invoice_ids = fields.
 
+    invoice_ids = fields.One2many('account.move','session_id','Factures')
+    invoice_count = fields.Integer(
+        string='Invoice Count', readonly=True, default=0, compute='_compute_invoice_count')
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -53,15 +61,16 @@ class Session(models.Model):
         
         return super(Session, self).create(vals_list)
     
+    @api.depends('invoice_ids')
+    def _compute_invoice_count(self):
+        for record in self:
+            record.invoice_count = len(record.invoice_ids)
+            
     @api.depends('date')
     def _compute_last_inscription_day(self):
         min_interval = int(self.env['ir.config_parameter'].sudo().get_param("exam_polylangue.minimal_day_before_inscription"))
         for rec in self:
-            print("================ calll _compute_out_inscription_delay")
             rec.last_inscription_day = rec.date - timedelta(days = min_interval)
-            print(f"================ last day: {rec.last_inscription_day}")
-            print(f"================ rec.date: {rec.date}")
-            print(f"================ min_interval: {min_interval}")
 
 
     # Définir des contraintes
@@ -75,7 +84,6 @@ class Session(models.Model):
             min_interval = int(self.env['ir.config_parameter'].sudo().get_param("exam_polylangue.minimal_day_before_inscription"))
             last_date = current_date - timedelta(days=min_interval)
             if  current_date > last_date:
-                print(f"========================")
                 return {'warning':{
                     "title": "Date non appropriée",
                     "message": "Vous ne pouriez pas creer des inscriptions a cette session car le nombre de jour entre la date d'aujourd'hui et la date de l'examen est inferieur au delay necessaire a la creation des inscriptions"
@@ -177,4 +185,15 @@ class Session(models.Model):
             self.message_post(body=message,
                               subject="Convocation a l'examen")
 
+    def action_view_invoices(self):
+        self.ensure_one()
+        return {
+            'name': 'Invoices',
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.move',
+            'view_mode': 'tree',
+            'views': [(False, 'tree'),(False, 'form')],
+            'domain': [('id', 'in', self.invoice_ids.ids)],
+            'target': 'current',
+        }
 

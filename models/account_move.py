@@ -14,6 +14,7 @@ class AccountMoveInherit(models.Model):
     end_invoice_date = fields.Date(string='Date fin de facturation')
     access_token = fields.Char(store=False, compute="_get_access_token")
     inscription_ids = fields.One2many('examen.inscription','invoice_id')
+    session_id = fields.Many2one('examen.session', 'Session')
 
     def _get_mail_template(self):
         """
