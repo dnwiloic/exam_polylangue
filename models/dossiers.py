@@ -130,7 +130,6 @@ class Dossier(models.Model):
         self.ensure_one()
         if not self.convocation_id :  
             self.convocation_id = self.env['convocation.history'].create({})
-        print(f" ====== {self.convocation_id}")
         return self.convocation_id.action_view_convocation()
 
     def get_exam_name(self):

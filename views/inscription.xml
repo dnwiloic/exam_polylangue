@@ -14,6 +14,7 @@
                                 attrs="{'invisible': [('status', '!=', 'draft')]}"/>
                      <button name="button_confirm" string="Confirmer" class="oe_highlight"
                                 type="object" groups="exam_polylangue.exam_group_user" data-hotkey="v"
+                                confirm="Après cette action, vous ne pouriez plus modifier ces inforation. Veuillez confirmer uniquement si vous êtes ur le point de payer la facture."
                                 attrs="{'invisible': [('status', '!=', 'draft')]}"/>
 
                     <field name="status" widget="statusbar" statusbar_visible="draft,confirm,validate"/>
@@ -34,14 +35,14 @@
                     <group >
                         <field name="session_id" options="{'no_create': True, 'no_update': True}"
                                 attrs="{'readonly': [('status', '!=', 'draft')]}" 
-                                domain="[('status','=','open'),('last_inscription_day', '>=',  context_today().strftime('%Y-%m-%d 00:00:00'))]"/>
+                                domain="[('status','=','open'),('date', '>=',  context_today().strftime('%Y-%m-%d 00:00:00'))]"/>
                         <field name="responsable_id" readonly="1"/>
                         <field name="branch_ids" invisible="1"/>
                         <field name="status_paiment" readonly="1" attrs="{'invisible':  [('invoice_id', '=', False)]}" />
                    </group>
                     <notebook name="participants" string="Participants">
                         <page name="participant_EDOF_page" string="Participants Edof">
-                            <field name="participant_edof" domain="[('status','not in',['INTRAINING','EXAM_SCHEDULED','EXAM_TO_CONFIRM','ACCEPTED']),('status_exam','in',['none','exam_to_reshedule']), ('branch_id','in',branch_ids)]" 
+                            <field name="participant_edof" domain="[('status_edof', 'in',['inTraining','refusedByAttendee','refusedByOrganism','serviceDoneDeclared','serviceDoneValidated','terminated']),('status_exam','in',['none','exam_to_reshedule']), ('branch_id','in',branch_ids)]" 
                                     options="{'no_create': True, 'no_update': True  }"
                                     attrs="{'readonly': [('status', '!=', 'draft')]}" >
                                 <tree editable="top">
@@ -64,7 +65,7 @@
                             </field>
                         </page>
                         <page name="participant_hors_CPF" string="Participants hors CPF">
-                            <field name="participant_hors_cpf" domain="[('status','not in',['intraining','exam_sheduled','exam_to_confirm', 'accepted']),('status_exam','in',['none','exam_to_reshedule']),('branch_id','in',branch_ids)]" 
+                            <field name="participant_hors_cpf" domain="[('status','not in',['exam_scheduled','exam_to_confirm']),('status_exam','in',['none','exam_to_reshedule']),('branch_id','in',branch_ids)]" 
                                     options="{'no_create': True, 'no_update': True }" 
                                     attrs="{'readonly': [('status', '!=', 'draft')]}" >
                                 <tree editable="top,bottom">

@@ -1,5 +1,5 @@
 from odoo import fields, models, api, _
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 
 class inscription(models.Model):
@@ -62,6 +62,10 @@ class inscription(models.Model):
             
         return True
     
+    @api.onchange('session_id')
+    def _check_session_delay(self):
+        if isinstance(self.session_id.last_inscription_day, date) and self.session_id.last_inscription_day  < date.today()  and not self.env.user.has_group('base.group_erp_manager'):
+            raise models.ValidationError("""Vous êtes hors délais pour inscrire ou confirmer l'inscription des candidats a cette session. Veuillez contacter un admnistrateur pour cela""")
     # @api.depends('participant_edof.exam_session_id')
     # def _compute_participant_edof(self):
 
@@ -158,7 +162,6 @@ class inscription(models.Model):
         self.ensure_one()
         nbr= len( [x for x in self.participant_edof if x.status_exam == "exam_to_reshedule"] ) \
                     + len( [x for x in self.participant_hors_cpf if x.status_exam == "exam_to_reshedule"] )
-        print(f"================ {nbr}")
         return nbr
 
     def _compute_invoice(self):
@@ -169,6 +172,7 @@ class inscription(models.Model):
                 'branch_id': self.responsable_id.branch_id.id,
                 'move_type': 'out_invoice',
                 'invoice_date':fields.Date.today(),
+                'session_id': self.session_id.id,
                 'journal_id': self._get_default_journal().id
             }
             try :
@@ -183,8 +187,8 @@ class inscription(models.Model):
                     try :
                         self.invoice_id = self.env['account.move'].sudo().create(invoice_data)
                         break
-                    except :
-                        pass
+                    except Exception as e:
+                        raise  models.ValidationError(e)
                     raise models.ValidationError("Impossible de creer la facture")
         # else :
             # for line in self.invoice_id.line_ids:
@@ -227,7 +231,7 @@ class inscription(models.Model):
 
     def button_confirm(self, confirm=False):
         self.ensure_one()
-        print(f"=============== {self.responsable_id.branch_id } === {self.responsable_id.company_id:}")
+        self._check_session_delay()
         if self._check_participant_limits() and  self._check_required_info_for_inscription() and self.responsable_id.branch_id and self.responsable_id.branch_id.company_id:
             if self._should_be_invoiced():
                 self._compute_invoice()
