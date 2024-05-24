@@ -16,6 +16,24 @@ class Session(models.Model):
         ids= self.env['res.groups'].sudo().search([("name","=","Responsable Agence")]).users.ids
         return ids
     
+    responsable_ids = fields.Many2many(
+        comodel_name="res.users", 
+        relation='responsable_ids_rel',
+        string='Responsables',
+        domain=lambda self: [('id', 'in', self.env['res.users'].search([('groups_id.name', '=', 'Responsable Agence')]).ids)],
+    )
+    edof_data_archive_ids = fields.Many2many(
+        comodel_name='edof.data.archive',
+        relation='session_edof_data_archive_rel'
+    )
+    branch_ids = fields.Many2many(
+        comodel_name="res.branch", 
+        string="Branches", 
+        related='responsable_id.branch_ids',
+        relation="session_branch_rel", 
+        column1="sessions", 
+        column2="branchs"
+    )
 
     name = fields.Char("Libelé")
     date = fields.Date("Date de l'examen", required=True, tracking=True)

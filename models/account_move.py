@@ -58,7 +58,7 @@ class AccountMoveInherit(models.Model):
 
     def send_invoice_payment_reminder(self):
         
-        invoices_due = self.env['account.move'].search([('state','=','posted'),('move_type','=','out_invoice'),('payment_state','=','not_paid'),('invoice_date_due', '<', fields.Date.today())])
+        invoices_due = self.env['account.move'].sudo().search([('state','=','posted'),('move_type','=','out_invoice'),('payment_state','=','not_paid'),('invoice_date_due', '<', fields.Date.today())])
         
         today = datetime.date.today()
         
