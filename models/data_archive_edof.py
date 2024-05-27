@@ -219,4 +219,3 @@ class DataArchiveEdof(models.Model):
         for rec in self:
             if rec.exam_session_id:
                 rec.last_annulation_day = rec.exam_session_id.date - timedelta(days=min_interval)
-
