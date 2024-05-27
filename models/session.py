@@ -22,7 +22,7 @@ class Session(models.Model):
         string='Responsables',
         domain=lambda self: [('id', 'in', self.env['res.users'].search([('groups_id.name', '=', 'Responsable Agence')]).ids)],
     )
-    edof_data_archive_ids = fields.Many2many(
+    participant_archive_edof = fields.Many2many(
         comodel_name='edof.data.archive',
         relation='session_edof_data_archive_rel'
     )

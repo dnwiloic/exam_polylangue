@@ -12,12 +12,24 @@
                                 confirm='Cette action est ireversible. Voulez-vous vraiment annuler cette inscription ?'
                                 type="object" groups="exam_polylangue.exam_group_user" data-hotkey="v"
                                 attrs="{'invisible': [('status', '!=', 'draft')]}"/>
-                     <button name="button_confirm" string="Confirmer" class="oe_highlight"
-                                type="object" groups="exam_polylangue.exam_group_user" data-hotkey="v"
-                                confirm="Après cette action, vous ne pouriez plus modifier ces inforation. Veuillez confirmer uniquement si vous êtes ur le point de payer la facture."
-                                attrs="{'invisible': [('status', '!=', 'draft')]}"/>
 
-                    <field name="status" widget="statusbar" statusbar_visible="draft,confirm,validate"/>
+                    <button name="send_inscription_details_to_admin" string="Demander la validation" type="object" class="oe_highlight"
+                            groups="exam_polylangue.exam_group_user, !exam_polylangue.exam_group_manager" 
+                            attrs="{'invisible': [('status', '!=', 'draft')]}" />
+                     
+                    <button name="button_confirm" string="Confirmer" class="oe_highlight"
+                                type="object" groups="exam_polylangue.exam_group_manager" data-hotkey="v"
+                                attrs="{'invisible': [('status', 'not in', ['draft', 'in_progress'])]}"
+                                confirm="Après cette action, vous ne pourrez plus modifier ces informations. Veuillez confirmer uniquement si vous êtes sur le point de payer la facture."
+                                />
+                    <button name="action_reverse_inscripiton" 
+                            string="REMETTRE EN BROUILLON" 
+                            type="object" 
+                            groups="exam_polylangue.exam_group_manager" 
+                            attrs="{'invisible': [('status', '!=', 'in_progress')]}"
+                            />
+
+                    <field name="status" widget="statusbar" statusbar_visible="draft,in_progress,confirm,validate"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -43,11 +55,13 @@
                     <notebook name="participants" string="Participants">
                         <page name="participant_EDOF_page" string="Participants Edof">
                             <field name="participant_edof" domain="[('status_edof', 'in',['inTraining','refusedByAttendee','refusedByOrganism','serviceDoneDeclared','serviceDoneValidated','terminated']),('status_exam','in',['none','exam_to_reshedule']), ('branch_id','in',branch_ids)]" 
-                                    options="{'no_create': True, 'no_update': True  }"
+                                    options="{'no_create': True, 'no_update': False  }"
                                     attrs="{'readonly': [('status', '!=', 'draft')]}" >
                                 <tree editable="top">
                                     <field name="attendee_last_name" readonly="1" />
                                     <field name="attendee_first_name" readonly="1" />
+                                    <field name="fass_pass" />
+                                    <field name="comments" />
                                     <field name="attendee_email" />
                                     <field name="attendee_phone_number" />
                                     <field name="gender" />
@@ -56,7 +70,7 @@
                                     <field name="maternal_langage" />
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
-                                    <field name="insciption_file"  />
+                                    <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': [('groups', '=', 'exam_polylangue.exam_group_manager')]}" />
                                     <field name="status_exam" readonly="1"/>
                                     <button name="cancel_ins" type="object" string="Reprogrammer" 
                                             attrs="{'invisible': [('status_exam', '!=', 'register_paid')]}" 
@@ -66,11 +80,13 @@
                         </page>
                         <page name="participant_hors_CPF" string="Participants hors CPF">
                             <field name="participant_hors_cpf" domain="[('status','not in',['exam_scheduled','exam_to_confirm']),('status_exam','in',['none','exam_to_reshedule']),('branch_id','in',branch_ids)]" 
-                                    options="{'no_create': True, 'no_update': True }" 
+                                    options="{'no_create': True, 'no_update': False }" 
                                     attrs="{'readonly': [('status', '!=', 'draft')]}" >
                                 <tree editable="top,bottom">
                                     <field name="last_name" readonly="1" />
                                     <field name="first_name" readonly="1" />
+                                    <field name="fass_pass" />
+                                    <field name="comments" />
                                     <field name="email" />
                                     <field name="phone" />
                                     <field name="gender" />
@@ -79,7 +95,7 @@
                                     <field name="maternal_langage" />
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
-                                    <field name="insciption_file"  />
+                                    <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
                                     <field name="status_exam" readonly="1" />
                                     <button name="cancel_ins" type="object" string="Reprogrammer" 
                                             attrs="{'invisible': [('status_exam', '!=', 'register_paid')]}" 
@@ -89,37 +105,43 @@
                             
                             </field>
                         </page>
-                        <page name="edof_data_archive_page" string="Archive EDOF">
+                        <page name="edof_data_archive_page" string="Archive EDOF" groups="exam_polylangue.exam_group_manager">
                             <field 
-                                name="edof_data_archive_ids"
-                                domain="[('branch_id','in',branch_ids)]" 
-                                options="{'no_create': True, 'no_update': True }" 
+                                name="participant_archive_edof"
+                                domain="[('branch_id', 'in', branch_ids)]" 
+                                options="{'no_create': True, 'no_update': False }" 
+                                attrs="{'readonly': [('status', 'not in', ['draft', 'in_progress'])]}"
                                 >
                                 <tree editable="top,bottom">
-                                    <field name="training_center_id" />
-                                    <field name="folder_number" />
-                                    <field name="attendee_first_name" />
-                                    <field name="attendee_last_name" />
-                                    <field name="attendee_address" />
-                                    <field name="attendee_postalcode" />
-                                    <field name="attendee_city" />
-                                    <field name="training_educative_duration" string="Durée(h)" />
-                                    <field name="training_price" string="Montant(€)" />
-                                    <field name="training_id" />
-                                    <field name="training_place" />
-                                    <field name="session_start_date" />
-                                    <field name="session_end_date" />
-                                    <field name="accepted_date" string="Accepté le" />
-                                    <field name="start_training_date" string="En formation EDOF" />
-                                    <field name="end_training_date" string="Sortie de formation EDOF" />
-                                    <field name="end_training_date_real" string="Sortie de formation" />
-                                    <field name="service_done_validated_date" string="Facturé le" />
-                                    <field name="status_edof" string="Statut EDOF" />
-                                    <field name="attendee_phone_number" string="Tel EDOF" />
-                                    <field name="attendee_email" string="Email EDOF" />
-                                    <field name="financial_organism_id" />
-                                    <field name="company_id" groups="base.group_multi_company" />
-                                    <field name="branch_id"  />
+                                    <field name="training_center_id" readonly="1"/>
+                                    <field name="folder_number" readonly="1"/>
+                                    <field name="fass_pass" />
+                                    <field name="comments"/>
+                                    <field name="attendee_first_name" readonly="1"/>
+                                    <field name="attendee_last_name" readonly="1"/>
+                                    <field name="attendee_address" readonly="1"/>
+                                    <field name="attendee_postalcode" readonly="1"/>
+                                    <field name="attendee_city" readonly="1"/>
+                                    <field name="training_educative_duration" string="Durée(h)" readonly="1"/>
+                                    <field name="training_price" string="Montant(€)" readonly="1"/>
+                                    <field name="training_id" readonly="1"/>
+                                    <field name="training_place" readonly="1"/>
+                                    <field name="session_start_date" readonly="1"/>
+                                    <field name="session_end_date" readonly="1"/>
+                                    <field name="accepted_date" string="Accepté le" readonly="1"/>
+                                    <field name="start_training_date" string="En formation EDOF" readonly="1"/>
+                                    <field name="end_training_date" string="Sortie de formation EDOF" readonly="1"/>
+                                    <field name="end_training_date_real" string="Sortie de formation" readonly="1"/>
+                                    <field name="service_done_validated_date" string="Facturé le" readonly="1"/>
+                                    <field name="status_edof" string="Statut EDOF" readonly="1"/>
+                                    <field name="attendee_phone_number" string="Tel EDOF" readonly="1"/>
+                                    <field name="attendee_email" string="Email EDOF" readonly="1"/>
+                                    <field name="financial_organism_id" readonly="1"/>
+                                    <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                                    <field name="branch_id"  readonly="1"/>
+                                    <button name="cancel_ins" type="object" string="Reprogrammer" 
+                                            attrs="{'invisible': [('status_exam', '!=', 'register_paid')]}" 
+                                            confirm="Voulez-vous vraiment annuler cette inscription ?"/>
                                 </tree>
                             </field>
                         </page>

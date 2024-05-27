@@ -38,7 +38,7 @@
                             <field name="date" attrs="{'readonly': [('name', '!=', False)]}"/>
                             <field name="time" widget="float_time" attrs="{'readonly': [('inscription_ids', '!=', [])]}" />
                             <field name="examen_id" domain="[('is_exam','=', True), ('is_pass','=', False)]" />
-                            <field name="responsable_id" attrs="{'readonly': [('inscription_ids', '!=', [])], 'on_change': '_update_edof_data_archive_ids'}" />
+                            <field name="responsable_id" attrs="{'readonly': [('inscription_ids', '!=', [])], 'on_change': '_update_participant_archive_edof'}" />
                         </group>
                         <group>
                             <field name="min_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
@@ -64,7 +64,7 @@
                                     <field name="nationality" />
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
-                                    <field name="insciption_file"  />
+                                    <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
                                     <field name="status_exam"/>
                                     <field name="folder_number"  />
                                     <button name="validate_exam" string="Valider" type="object"
@@ -93,7 +93,7 @@
                                     <field name="nationality" />
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
-                                    <field name="insciption_file"  />
+                                    <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
                                     <field name="status_exam" />
                                     <field name="number"  />
                                     <button name="validate_exam" string="Valider"  type="object"
@@ -112,7 +112,7 @@
                         </page>
                         <page name="edof_data_archive_page" string="Archive EDOF">
                             <field 
-                                name="edof_data_archive_ids"
+                                name="participant_archive_edof"
                                 domain="[('branch_id','in', branch_ids)]" 
                                 options="{'no_create': True, 'no_update': True }" >
                                 <tree editable="top,bottom">

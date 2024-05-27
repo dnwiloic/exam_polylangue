@@ -59,6 +59,13 @@ class Dossier(models.Model):
                         compute="_compute_convocation",
                         store=True
                         )
+    comments = fields.Text(string="Commentaires", store=True)
+    fass_pass = fields.Selection(
+        selection=lambda self: [(p.id, p.name) for p in self.env['product.product'].search([('is_pass', '=', True)])],
+        string='FAST PASS',
+        store=True,
+        tracking=True,
+    )
     
     @api.depends("status_exam")
     def _compute_status(self):
