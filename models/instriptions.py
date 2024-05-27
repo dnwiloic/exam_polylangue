@@ -26,6 +26,7 @@ class inscription(models.Model):
 
     participant_edof = fields.Many2many("edof.registration.folder", relation='inscription_participant_hors_cpf_rel')
     participant_hors_cpf = fields.Many2many("gestion.formation.dossier", relation='inscription_participant_edof_rel')
+    edof_data_archive_ids = fields.Many2many(comodel_name='edof.data.archive',relation='inscription_edof_data_archive_rel')
 
     responsable_id = fields.Many2one("res.users", string="Responsable", related='session_id.responsable_id', store=True)
     branch_ids = fields.Many2many("res.branch", string="Branches", related='responsable_id.branch_ids',
