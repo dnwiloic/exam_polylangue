@@ -37,6 +37,10 @@ class inscription(models.Model):
     # status_payment = fields.Selection(selection=STATUS, compute="_compute_status", string='Etat', default='draft', store=True)
     invoice_id = fields.Many2one('account.move', required=False, default=None)
     status_paiment = fields.Selection(PAYMENT_STATE_SELECTION,readonly=True, compute="_compute_payment_state", store=True, default="not_paid")
+    comments = fields.Text(
+        string="Commentaires", 
+        store=True
+    )
 
     
     def _compute_nbr_insciption(self):

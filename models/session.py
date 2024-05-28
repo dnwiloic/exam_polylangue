@@ -70,6 +70,10 @@ class Session(models.Model):
     invoice_ids = fields.One2many('account.move','session_id','Factures')
     invoice_count = fields.Integer(
         string='Invoice Count', readonly=True, default=0, compute='_compute_invoice_count')
+    comments = fields.Text(
+        string="Commentaires", 
+        store=True
+    )
 
     @api.model_create_multi
     def create(self, vals_list):

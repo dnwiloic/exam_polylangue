@@ -27,6 +27,11 @@ class DataArchiveEdof(models.Model):
         ("INSUFFICIENT_LEVEL", "Niveau insuffisant")
     ]
 
+    GENDER = [
+        ('male', "Masculin"),
+        ('female', "Feminin"),
+    ]
+
     @api.model
     def _get_status_list(self):
         # if self.env.user.has_group('edof_data.edof_group_chef_agence') is True:
@@ -39,10 +44,9 @@ class DataArchiveEdof(models.Model):
         store=True
     )
     fass_pass = fields.Selection(
-        selection=lambda self: [(p.id, p.name) for p in self.env['product.product'].search([('is_pass', '=', True)])],
+        selection=lambda self: [(str(p.id), p.name) for p in self.env['product.product'].search([('is_pass', '=', True)])],
         string='FAST PASS',
         store=True,
-        tracking=True,
     )
     exam_date = fields.Date(
         string='Date de l\'examen', 
@@ -99,6 +103,17 @@ class DataArchiveEdof(models.Model):
         compute="_compute_convocation",
         store=True
     )
+    gender = fields.Selection(GENDER, string='Genre')
+    birth_day = fields.Date(string='Date de naissance')
+    nationality = fields.Many2one('res.country','Pays de nationalité')
+    motivation = fields.Selection(learner_utils.MOTIVATIONS_LIST) 
+    n_cni_ts = fields.Char('N° de CNI/TS')
+    insciption_file = fields.Binary(string='Fichier')
+
+    @api.model
+    def _get_last_selected_fass_pass(self):
+        last_record = self.search([], limit=1, order='id desc')
+        return last_record.fass_pass if last_record else False
 
     @api.depends("status_exam")
     def _compute_status(self):

@@ -34,12 +34,12 @@ class Dossier(models.Model):
     ]
 
     exam_session_id = fields.Many2one('examen.session', store=True, readonly=True)
-    gender = fields.Selection(GENDER, string='genre')
-    birth_day = fields.Date(string='date de naissance')
+    gender = fields.Selection(GENDER, string='Genre')
+    birth_day = fields.Date(string='Date de naissance')
     nationality = fields.Many2one('res.country','Pays de nationalité')
     motivation = fields.Selection(learner_utils.MOTIVATIONS_LIST) 
     n_cni_ts = fields.Char('N° de CNI/TS')
-    maternal_langage = fields.Char("langue maternelle")
+    maternal_langage = fields.Char("Langue maternelle")
     insciption_file = fields.Binary(
         string='Fichier'
     )
@@ -61,10 +61,9 @@ class Dossier(models.Model):
                         )
     comments = fields.Text(string="Commentaires", store=True)
     fass_pass = fields.Selection(
-        selection=lambda self: [(p.id, p.name) for p in self.env['product.product'].search([('is_pass', '=', True)])],
+        selection=lambda self: [(str(p.id), p.name) for p in self.env['product.product'].search([('is_pass', '=', True)])],
         string='FAST PASS',
         store=True,
-        tracking=True,
     )
     
     @api.depends("status_exam")

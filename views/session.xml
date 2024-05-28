@@ -51,13 +51,10 @@
                         
                        <page name="participant_edof_page" string="Participants Edof">
                             <field name="participant_edof"  options="{'no_create': True, 'no_update': True,}" >
-                                <tree >
-                                    <!-- <control>
-                                        <create name="add_line_control" string="Ajouter une session" />
-                                    </control> -->
-                                    <field name="attendee_last_name" />
-                                    <field name="attendee_first_name"  />
+                                <tree editable="false">
                                     <field name="attendee_email" />
+                                    <field name="attendee_last_name" readonly="1" />
+                                    <field name="attendee_first_name"  readonly="1" />
                                     <field name="attendee_phone_number" />
                                     <field name="gender" />
                                     <field name="birth_day" />
@@ -65,8 +62,9 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
+                                    <field name="fass_pass" />
                                     <field name="status_exam"/>
-                                    <field name="folder_number"  />
+                                    <field name="comments"/>
                                     <button name="validate_exam" string="Valider" type="object"
                                             groups="exam_polylangue.exam_group_manager"
                                             attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
@@ -83,10 +81,10 @@
                         </page>
                         <page name="Participant_hors_CPF_page" string="Participant  hors CPF">
                             <field name="participant_hors_cpf" options="{'no_create': True, 'no_update': True,}" >
-                                <tree >
+                                <tree editable="false">
+                                    <field name="email" />
                                     <field name="last_name" readonly="1" />
                                     <field name="first_name" readonly="1" />
-                                    <field name="email" />
                                     <field name="phone" />
                                     <field name="gender" />
                                     <field name="birth_day" />
@@ -94,8 +92,10 @@
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
                                     <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
+                                    <field name="fass_pass" />
                                     <field name="status_exam" />
-                                    <field name="number"  />
+                                    <field name="comments"/>
+                                    <!-- <field name="number"  /> -->
                                     <button name="validate_exam" string="Valider"  type="object"
                                             groups="exam_polylangue.exam_group_manager"
                                             attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
@@ -115,31 +115,30 @@
                                 name="participant_archive_edof"
                                 domain="[('branch_id','in', branch_ids)]" 
                                 options="{'no_create': True, 'no_update': True }" >
-                                <tree editable="top,bottom">
-                                    <field name="training_center_id" />
-                                    <field name="folder_number" />
-                                    <field name="attendee_first_name" />
-                                    <field name="attendee_last_name" />
-                                    <field name="attendee_address" />
-                                    <field name="attendee_postalcode" />
-                                    <field name="attendee_city" />
-                                    <field name="training_educative_duration" string="Durée(h)" />
-                                    <field name="training_price" string="Montant(€)" />
-                                    <field name="training_id" />
-                                    <field name="training_place" />
-                                    <field name="session_start_date" />
-                                    <field name="session_end_date" />
-                                    <field name="accepted_date" string="Accepté le" />
-                                    <field name="start_training_date" string="En formation EDOF" />
-                                    <field name="end_training_date" string="Sortie de formation EDOF" />
-                                    <field name="end_training_date_real" string="Sortie de formation" />
-                                    <field name="service_done_validated_date" string="Facturé le" />
-                                    <field name="status_edof" string="Statut EDOF" />
-                                    <field name="attendee_phone_number" string="Tel EDOF" />
+                                <tree editable="false">
                                     <field name="attendee_email" string="Email EDOF" />
-                                    <field name="financial_organism_id" />
-                                    <field name="company_id" groups="base.group_multi_company" />
-                                    <field name="branch_id"  />
+                                    <field name="attendee_last_name" readonly="1" />
+                                    <field name="attendee_first_name" readonly="1"/>
+                                    <field name="attendee_phone_number" />
+                                    <field name="gender" />
+                                    <field name="birth_day" />
+                                    <field name="nationality" />
+                                    <field name="motivation"/>
+                                    <field name="n_cni_ts" />
+                                    <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
+                                    <field name="fass_pass" />
+                                    <field name="status_exam" />                                    
+                                    <field name="comments"/>
+                                    <button name="validate_exam" string="Valider"  type="object"
+                                            groups="exam_polylangue.exam_group_manager"
+                                            attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
+                                    <button name="cancel_exam" string="Rejeter"  type="object"
+                                            groups="exam_polylangue.exam_group_manager"
+                                            attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
+                                    <button name="send_exam_convocation" string="Convoquer" type="object"
+                                            groups="exam_polylangue.exam_group_manager"
+                                            attrs="{'invisible': [('status_exam','!=','exam_sheduled')]}" 
+                                            help=" ${nbr_convocations} envoyé(s)"/>
                                 </tree>
                             </field>
                         </page>
@@ -151,6 +150,9 @@
                                     <field name="partner_id" />
                                 </tree>
                             </field>
+                        </page>
+                        <page name="comments_page" string="Commentaires">
+                            <field name="comments" placeholder="Vous pouvez désormais laissez un commentaire sur cette session ici."/>
                         </page>
                        
                     </notebook>

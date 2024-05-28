@@ -58,19 +58,19 @@
                                     options="{'no_create': True, 'no_update': False  }"
                                     attrs="{'readonly': [('status', '!=', 'draft')]}" >
                                 <tree editable="top">
+                                    <field name="attendee_email" />
                                     <field name="attendee_last_name" readonly="1" />
                                     <field name="attendee_first_name" readonly="1" />
-                                    <field name="fass_pass" />
-                                    <field name="comments" />
-                                    <field name="attendee_email" />
                                     <field name="attendee_phone_number" />
                                     <field name="gender" />
                                     <field name="birth_day" />
                                     <field name="nationality" />
-                                    <field name="maternal_langage" />
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
+                                    <field name="maternal_langage" />
                                     <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': [('groups', '=', 'exam_polylangue.exam_group_manager')]}" />
+                                    <field name="fass_pass" />
+                                    <field name="comments" />
                                     <field name="status_exam" readonly="1"/>
                                     <button name="cancel_ins" type="object" string="Reprogrammer" 
                                             attrs="{'invisible': [('status_exam', '!=', 'register_paid')]}" 
@@ -83,19 +83,19 @@
                                     options="{'no_create': True, 'no_update': False }" 
                                     attrs="{'readonly': [('status', '!=', 'draft')]}" >
                                 <tree editable="top,bottom">
+                                    <field name="email" />
                                     <field name="last_name" readonly="1" />
                                     <field name="first_name" readonly="1" />
-                                    <field name="fass_pass" />
-                                    <field name="comments" />
-                                    <field name="email" />
                                     <field name="phone" />
                                     <field name="gender" />
                                     <field name="birth_day" />
                                     <field name="nationality" />
-                                    <field name="maternal_langage" />
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
+                                    <field name="maternal_langage" />
                                     <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
+                                    <field name="fass_pass" />
+                                    <field name="comments" />
                                     <field name="status_exam" readonly="1" />
                                     <button name="cancel_ins" type="object" string="Reprogrammer" 
                                             attrs="{'invisible': [('status_exam', '!=', 'register_paid')]}" 
@@ -113,37 +113,34 @@
                                 attrs="{'readonly': [('status', 'not in', ['draft', 'in_progress'])]}"
                                 >
                                 <tree editable="top,bottom">
-                                    <field name="training_center_id" readonly="1"/>
-                                    <field name="folder_number" readonly="1"/>
-                                    <field name="fass_pass" />
-                                    <field name="comments"/>
+                                    <field name="attendee_email" string="Email EDOF" />
+                                    <field name="attendee_last_name" readonly="1" />
                                     <field name="attendee_first_name" readonly="1"/>
-                                    <field name="attendee_last_name" readonly="1"/>
-                                    <field name="attendee_address" readonly="1"/>
-                                    <field name="attendee_postalcode" readonly="1"/>
-                                    <field name="attendee_city" readonly="1"/>
-                                    <field name="training_educative_duration" string="Durée(h)" readonly="1"/>
-                                    <field name="training_price" string="Montant(€)" readonly="1"/>
-                                    <field name="training_id" readonly="1"/>
-                                    <field name="training_place" readonly="1"/>
-                                    <field name="session_start_date" readonly="1"/>
-                                    <field name="session_end_date" readonly="1"/>
-                                    <field name="accepted_date" string="Accepté le" readonly="1"/>
-                                    <field name="start_training_date" string="En formation EDOF" readonly="1"/>
-                                    <field name="end_training_date" string="Sortie de formation EDOF" readonly="1"/>
-                                    <field name="end_training_date_real" string="Sortie de formation" readonly="1"/>
-                                    <field name="service_done_validated_date" string="Facturé le" readonly="1"/>
-                                    <field name="status_edof" string="Statut EDOF" readonly="1"/>
-                                    <field name="attendee_phone_number" string="Tel EDOF" readonly="1"/>
-                                    <field name="attendee_email" string="Email EDOF" readonly="1"/>
-                                    <field name="financial_organism_id" readonly="1"/>
-                                    <field name="company_id" groups="base.group_multi_company" readonly="1"/>
-                                    <field name="branch_id"  readonly="1"/>
-                                    <button name="cancel_ins" type="object" string="Reprogrammer" 
-                                            attrs="{'invisible': [('status_exam', '!=', 'register_paid')]}" 
-                                            confirm="Voulez-vous vraiment annuler cette inscription ?"/>
+                                    <field name="attendee_phone_number" />
+                                    <field name="gender" />
+                                    <field name="birth_day" />
+                                    <field name="nationality" />
+                                    <field name="motivation"/>
+                                    <field name="n_cni_ts" />
+                                    <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
+                                    <field name="fass_pass" />
+                                    <field name="status_exam" />                                    
+                                    <field name="comments"/>
+                                    <button name="validate_exam" string="Valider"  type="object"
+                                            groups="exam_polylangue.exam_group_manager"
+                                            attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
+                                    <button name="cancel_exam" string="Rejeter"  type="object"
+                                            groups="exam_polylangue.exam_group_manager"
+                                            attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
+                                    <button name="send_exam_convocation" string="Convoquer" type="object"
+                                            groups="exam_polylangue.exam_group_manager"
+                                            attrs="{'invisible': [('status_exam','!=','exam_sheduled')]}" 
+                                            help=" ${nbr_convocations} envoyé(s)"/>
                                 </tree>
                             </field>
+                        </page>
+                        <page name="comments_page" string="Commentaires">
+                            <field name="comments" placeholder="Vous pouvez désormais laissez un commentaire sur cette inscription ici."/>
                         </page>
                     </notebook>
 
