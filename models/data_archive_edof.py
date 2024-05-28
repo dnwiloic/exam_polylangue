@@ -15,6 +15,13 @@ from odoo.osv import expression
 class DataArchiveEdof(models.Model):
     _inherit = 'edof.data.archive'
 
+    @api.model
+    def _get_status_list(self):
+        # if self.env.user.has_group('edof_data.edof_group_chef_agence') is True:
+        #     return [("INTRAINING", "En formation"), ("FINISHED_TRAINING", "Sortie de formation"), ("ACCEPTED", "Accepté"),]
+        # else:
+        return self.STATUS
+        
     STATUS = [
         ("INTRAINING", "En formation"),
         ("FINISHED_TRAINING_OR_TO_BE_BILLED", "Sortie de formation / À facturer"),
@@ -32,12 +39,6 @@ class DataArchiveEdof(models.Model):
         ('female', "Feminin"),
     ]
 
-    @api.model
-    def _get_status_list(self):
-        # if self.env.user.has_group('edof_data.edof_group_chef_agence') is True:
-        #     return [("INTRAINING", "En formation"), ("FINISHED_TRAINING", "Sortie de formation"), ("ACCEPTED", "Accepté"),]
-        # else:
-        return self.STATUS
 
     comments = fields.Text(
         string="Commentaires", 
@@ -103,7 +104,7 @@ class DataArchiveEdof(models.Model):
         compute="_compute_convocation",
         store=True
     )
-    gender = fields.Selection(GENDER, string='Genre')
+    gender = fields.Selection(selection=GENDER, string='Genre', store=True)
     birth_day = fields.Date(string='Date de naissance')
     nationality = fields.Many2one('res.country','Pays de nationalité')
     motivation = fields.Selection(learner_utils.MOTIVATIONS_LIST) 
