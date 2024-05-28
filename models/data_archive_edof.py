@@ -21,7 +21,7 @@ class DataArchiveEdof(models.Model):
         #     return [("INTRAINING", "En formation"), ("FINISHED_TRAINING", "Sortie de formation"), ("ACCEPTED", "Accepté"),]
         # else:
         return self.STATUS
-        
+
     STATUS = [
         ("INTRAINING", "En formation"),
         ("FINISHED_TRAINING_OR_TO_BE_BILLED", "Sortie de formation / À facturer"),
@@ -104,7 +104,7 @@ class DataArchiveEdof(models.Model):
         compute="_compute_convocation",
         store=True
     )
-    gender = fields.Selection(selection=GENDER, string='Genre', store=True)
+    gender = fields.Selection(selection=lambda self: GENDER, string='Genre', store=True)
     birth_day = fields.Date(string='Date de naissance')
     nationality = fields.Many2one('res.country','Pays de nationalité')
     motivation = fields.Selection(learner_utils.MOTIVATIONS_LIST) 
