@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <data noupdate="1">
+        <!--Email template -->
+        <record id="email_template_exam_convocation_archive_edof" model="mail.template">
+            <field name="name">Stagiaire : Convocation au Test de fin de formation pour candidats Archive EDOF</field>
+            <field name="model_id" ref="exam_polylangue.model_edof_data_archive"/>
+            <field name="email_from">{{ (object.company_id.email or user.email_formatted) }}</field>
+            <field name="email_to">{{  object.attendee_email }}</field>
+            <field name="subject">Convocation au Test {{ object.company_id.name or 'n/a' }}</field>
+            <field name="description">Envoyé après validation de l'incription du Stagiaire à une session d'examen</field>
+            <field name="body_html" type="html">
+                <t t-call="exam_polylangue.comvocation_exam_archive_edof_template"/>
+            </field>
+            <field name="report_template" ref="exam_polylangue.action_exam_convocation_archive_edof"/>
+            <field name="report_name">Covocation_examen_{{ (object.attendee_first_name or '') }}</field>
+            <field name="lang"></field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+    
+    </data>
+    
+
+</odoo>

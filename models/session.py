@@ -16,6 +16,20 @@ class Session(models.Model):
         ids= self.env['res.groups'].sudo().search([("name","=","Responsable Agence")]).users.ids
         return ids
     
+    responsable_ids = fields.Many2many(
+        comodel_name="res.users", 
+        relation='responsable_ids_rel',
+        string='Responsables',
+        domain=lambda self: [('id', 'in', self.env['res.users'].search([('groups_id.name', '=', 'Responsable Agence')]).ids)],
+    )
+    branch_ids = fields.Many2many(
+        comodel_name="res.branch", 
+        string="Branches", 
+        related='responsable_id.branch_ids',
+        relation="session_branch_rel", 
+        column1="sessions", 
+        column2="branchs"
+    )
 
     name = fields.Char("Libelé")
     date = fields.Date("Date de l'examen", required=True, tracking=True)
@@ -44,6 +58,7 @@ class Session(models.Model):
     # cand_hcpf = fields.One2many(comodel_name="gestion.formation.dossier", inverse_name='exam_session_id')
     # candidats dont l'incription est valide
     participant_edof = fields.One2many("edof.registration.folder", inverse_name="exam_session_id")
+    participant_archive_edof = fields.One2many(comodel_name='edof.data.archive', inverse_name="exam_session_id")
     
     
     participant_hors_cpf = fields.One2many("gestion.formation.dossier", inverse_name="exam_session_id")
@@ -52,6 +67,10 @@ class Session(models.Model):
     invoice_ids = fields.One2many('account.move','session_id','Factures')
     invoice_count = fields.Integer(
         string='Invoice Count', readonly=True, default=0, compute='_compute_invoice_count')
+    comments = fields.Text(
+        string="Commentaires", 
+        store=True
+    )
 
     @api.model_create_multi
     def create(self, vals_list):

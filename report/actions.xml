@@ -23,4 +23,15 @@
         <field name="binding_type">report</field>
     </record>
 
+    <record id="action_exam_convocation_archive_edof" model="ir.actions.report">
+        <field name="name">Examen/ Convocations</field>
+        <field name="model">edof.data.archive</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">exam_polylangue.report_exam_convocation_archive_edof</field>
+        <field name="report_file">exam_polylangue.report_exam_convocation_archive_edof</field>
+        <field name="print_report_name">'Convocation examen - %s' % (object.attendee_first_name)</field>
+        <field name="binding_model_id" ref="model_edof_data_archive"/>
+        <field name="binding_type">report</field>
+    </record>
+
 </odoo>

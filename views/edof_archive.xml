@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="rarchive_edof_form_view_inherit" model="ir.ui.view">
+        <field name="name">edof.data.archive.details.folder.herit.form</field>
+        <field name="model">edof.data.archive</field>
+        <field name="inherit_id" ref="edof_data_archives.edof_data_archive_details_form_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='attendee_email']" position="after">
+                <field name="exam_date" string="Examen le" />
+                <field name="exam_center_id" options="{'no_create': True}" />
+            </xpath>
+            <xpath expr="//field[@name='branch_id']" position="after">
+                <field name="time" widget="float_time" />
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

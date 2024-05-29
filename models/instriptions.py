@@ -1,6 +1,6 @@
 from odoo import fields, models, api, _
 from datetime import datetime, timedelta, date
-
+import logging
 
 class inscription(models.Model):
     _name = 'examen.inscription'
@@ -8,6 +8,7 @@ class inscription(models.Model):
 
     STATUS = [
         ('draft', 'Brouillon'),
+        ('in_progress', 'En attente'),
         ('confirm', 'Confirmé'),
         ('validate', 'Validé'),
         ('cancel', 'Annulé')
@@ -20,12 +21,13 @@ class inscription(models.Model):
         ('partial', 'Partielement payé'),
         ('reversed', 'Reversé'),
         ('invoicing_legacy', "Héritage de l'application de facturation"),
-]
+    ]
 
-    session_id = fields.Many2one("examen.session", required=True)
+    session_id = fields.Many2one(comodel_name="examen.session", required=True)
 
     participant_edof = fields.Many2many("edof.registration.folder", relation='inscription_participant_hors_cpf_rel')
     participant_hors_cpf = fields.Many2many("gestion.formation.dossier", relation='inscription_participant_edof_rel')
+    participant_archive_edof = fields.Many2many(comodel_name='edof.data.archive',relation='inscription_edof_data_archive_rel')
 
     responsable_id = fields.Many2one("res.users", string="Responsable", related='session_id.responsable_id', store=True)
     branch_ids = fields.Many2many("res.branch", string="Branches", related='responsable_id.branch_ids',
@@ -34,19 +36,29 @@ class inscription(models.Model):
     status = fields.Selection(selection=STATUS, compute="_compute_status", string='Etat', default='draft', store=True)
     # status_payment = fields.Selection(selection=STATUS, compute="_compute_status", string='Etat', default='draft', store=True)
     invoice_id = fields.Many2one('account.move', required=False, default=None)
-    status_paiment = fields.Selection(PAYMENT_STATE_SELECTION,readonly=True, compute="_compute_payment_state", store=True, default="not_paid")       
+    status_paiment = fields.Selection(PAYMENT_STATE_SELECTION,readonly=True, compute="_compute_payment_state", store=True, default="not_paid")
+    comments = fields.Text(
+        string="Commentaires", 
+        store=True
+    )
 
     
     def _compute_nbr_insciption(self):
         self.ensure_one()
-        return len(self.participant_edof) + len(self.participant_hors_cpf)
+        return len(self.participant_edof) + len(self.participant_hors_cpf) + len(self.participant_archive_edof)
+
+    def _compute_nbr_edof_and_archive_edof_insciption(self):
+        self.ensure_one()
+        return len(self.participant_edof) + len(self.participant_archive_edof)
+    
+    def _compute_nbr_hors_cpf_insciption(self):
+        self.ensure_one()
+        return len(self.participant_hors_cpf)
     
     def get_nbr_inscription_to_session(self):
         self.ensure_one()
         return self.session_id.get_nbr_inscription()
     
-    
-
     @api.constrains('participant_edof', 'participant_hors_cpf')
     def _check_participant_limits(self):
         for record in self:
@@ -66,13 +78,6 @@ class inscription(models.Model):
     def _check_session_delay(self):
         if isinstance(self.session_id.last_inscription_day, date) and self.session_id.last_inscription_day  < date.today()  and not self.env.user.has_group('base.group_erp_manager'):
             raise models.ValidationError("""Vous êtes hors délais pour inscrire ou confirmer l'inscription des candidats a cette session. Veuillez contacter un admnistrateur pour cela""")
-    # @api.depends('participant_edof.exam_session_id')
-    # def _compute_participant_edof(self):
-
-    # @api.depends('participant_hors_cpf.exam_session_id')
-    # def _compute_participant_hors_cpf(self):
-    #     for rec in self:
-    #         if rec.status in ['confirm','validate']
 
     def _check_required_info_for_inscription(self):
         self.ensure_one()
@@ -104,6 +109,16 @@ class inscription(models.Model):
 
         return True
     
+    def action_reverse_inscripiton(self):
+        self.ensure_one()
+        if self.status == 'in_progress':
+            self.status = 'draft'
+
+    def send_inscription_details_to_admin(self):
+        self.ensure_one()
+        if self.status == 'draft':
+            self.status = 'in_progress'
+
     def _validate_inscription(self):
         self.ensure_one()
         
@@ -126,14 +141,11 @@ class inscription(models.Model):
                 'status_exam': 'register_paid',
             })
 
-
     @api.depends('invoice_id.payment_state')
     def _compute_status(self):
         for record in self:
            record._validate_inscription()
                
-
-
     def _get_default_journal(self):
         self.ensure_one()
         journal = self.env['account.journal'].sudo().search([('type','=','sale'), ('company_id','=',self._get_invoiced_company().id)], limit=1)
@@ -154,15 +166,88 @@ class inscription(models.Model):
         penality_product = self.env['product.product'].sudo().search([
             ('is_pass','=',True),
              ('penality_limit','>=',days_difference) ], order="penality_limit asc", limit=1)
-        
+        return penality_product
+
+    def _search_penality_product(self, product):
+        self.ensure_one()
+        penality_product = self.env['product.product'].sudo().search(['|', ('name','ilike', product), ('id','ilike', product)], order="penality_limit asc", limit=1)
         return penality_product
 
     def _get_nbr_already_paid(self):
         """Return the nomber of inscription already paid"""
         self.ensure_one()
         nbr= len( [x for x in self.participant_edof if x.status_exam == "exam_to_reshedule"] ) \
-                    + len( [x for x in self.participant_hors_cpf if x.status_exam == "exam_to_reshedule"] )
+            + len( [x for x in self.participant_hors_cpf if x.status_exam == "exam_to_reshedule"] )
         return nbr
+    
+    def _get_nbr_already_hors_cpf_paid(self):
+        """Return the nomber of inscription already paid"""
+        self.ensure_one()
+        return len( [x for x in self.participant_hors_cpf if x.status_exam == "exam_to_reshedule"] )
+
+    def _get_nbr_edof_and_rchive_edof_already_paid(self):
+        """Return the nomber of inscription already paid"""
+        self.ensure_one()
+        return len( [x for x in self.participant_edof if x.status_exam == "exam_to_reshedule"] ) 
+        # \
+        #         + len(self.participant_archive_edof)
+    def write_edof_penality(self):
+        penality_count = {}
+        if (len(self.participant_edof) > 0):
+            for participant in self.participant_edof:
+                if participant.fass_pass:
+                    if participant.fass_pass not in penality_count:
+                        penality_count[participant.fass_pass] = 1
+                    else:
+                        penality_count[participant.fass_pass] += 1
+        for fass_pass, count in penality_count.items():
+            participant_penality = self._search_penality_product(fass_pass)
+            if participant_penality:
+                self.env['account.move.line'].sudo().create({
+                    'move_id': self.invoice_id.id,
+                    'product_id': participant_penality.id,
+                    'name': self._compute_invoice_edof_fas_pass_description(participant_penality),
+                    'quantity': count, 
+                })
+
+    def write_archive_edof_penality(self):
+        penality_count = {}
+        if (len(self.participant_archive_edof) > 0):
+            for participant in self.participant_archive_edof:
+                if participant.fass_pass:
+                    if participant.fass_pass not in penality_count:
+                        penality_count[participant.fass_pass] = 1
+                    else:
+                        penality_count[participant.fass_pass] += 1
+                        
+        for fass_pass, count in penality_count.items():
+            participant_penality = self._search_penality_product(fass_pass)
+            if participant_penality:
+                self.env['account.move.line'].sudo().create({
+                    'move_id': self.invoice_id.id,
+                    'product_id': participant_penality.id,
+                    'name': self._compute_invoice_archive_edof_fas_pass_description(participant_penality),
+                    'quantity': count, 
+                })
+
+    def write_archive_hors_cpf_penality(self):
+        penality_count = {}
+        if (len(self.participant_hors_cpf) > 0):
+            for participant in self.participant_hors_cpf:
+                if participant.fass_pass:
+                    if participant.fass_pass not in penality_count:
+                        penality_count[participant.fass_pass] = 1
+                    else:
+                        penality_count[participant.fass_pass] += 1
+        for fass_pass, count in penality_count.items():
+            participant_penality = self._search_penality_product(fass_pass)
+            if participant_penality:
+                self.env['account.move.line'].sudo().create({
+                    'move_id': self.invoice_id.id,
+                    'product_id': participant_penality.id, 
+                    'name': self._compute_invoice_hors_cpf_fas_pass_description(participant_penality),
+                    'quantity': count, 
+                })
 
     def _compute_invoice(self):
         self.ensure_one()
@@ -194,30 +279,50 @@ class inscription(models.Model):
             # for line in self.invoice_id.line_ids:
             #     line.sudo().unlink()    
 
-        # create new product line
-        
-        self.env['account.move.line'].sudo().create({
-                'move_id': self.invoice_id.id,
-                'product_id': self.session_id.examen_id.id,
-                'name': self._compute_invoice_description(),
-                'quantity': self._compute_nbr_insciption() - self._get_nbr_already_paid(), 
-                # 'account_id': insc.session_id.examen_id.account_id.id, 
-            }
-        )
+        # create new product line for exam price   #################################
 
-        # check and add penality
-        pass_product = self._get_penality_product()
-        if pass_product :
+        # cas du TEF
+        if self.session_id.examen_id.name == 'TEF':
+
+            # ========================  ecriture comptable: Examen EDOF & Archive EDOF   ===================================
+
             self.env['account.move.line'].sudo().create({
                 'move_id': self.invoice_id.id,
-                'product_id': pass_product.id,
-                'name': f"Pénalité pour une inscription éffectué durant les {pass_product.penality_limit} jours précédant la date de l'examen",
-                'quantity': self._compute_nbr_insciption() - self._get_nbr_already_paid(), 
-                # 'account_id': insc.session_id.examen_id.account_id.id, 
-            })
-
+                'product_id': self.session_id.examen_id.id,
+                'name': self._compute_invoice_edof_and_archive_edof_description(),
+                'quantity': self._compute_nbr_edof_and_archive_edof_insciption() - self._get_nbr_edof_and_rchive_edof_already_paid(), 
+                }
+            )
+            self.write_edof_penality()          # ecriture comptable: Penalite EDOF 
+            self.write_archive_edof_penality()  # ecriture comptable: Penalite ARCHIVE  EDOF
+            
+            # ========================  ecriture comptable: EXAMEN TEF HORS CPF  ===================================
+            
+            tef_hcpf_product = self.env['product.product'].search([('name', '=', 'TEF HCPF')], limit=1)
+            self.env['account.move.line'].sudo().create({
+                'move_id': self.invoice_id.id,
+                'product_id': tef_hcpf_product.id,
+                'name': self._compute_invoice_hors_cpf_description(),
+                'quantity': self._compute_nbr_hors_cpf_insciption() - self._get_nbr_already_hors_cpf_paid(), 
+                }
+            )
+            self.write_archive_hors_cpf_penality() # ecriture comptable: Penalite EXAMEN TEF HORS CPF
        
+        # cas d'un autre examen
+        else:
+            # ========================  ecriture comptable:  EXAMEN EDOF, ARCHIVE EDOF & HORS CPF  ===================================
+            self.env['account.move.line'].sudo().create({
+                    'move_id': self.invoice_id.id,
+                    'product_id': self.session_id.examen_id.id,
+                    'name': self._compute_invoice_description(),
+                    'quantity': self._compute_nbr_insciption() - self._get_nbr_already_paid(), 
+                }
+            )
+            self.write_edof_penality()             # ecriture comptable: Penalite EDOF 
+            self.write_archive_edof_penality()     # ecriture comptable: Penalite ARCHIVE  EDOF
+            self.write_archive_hors_cpf_penality() # ecriture comptable: Penalite EXAMEN TEF HORS CPF
 
+                
     def _post_invoice(self):
         self.ensure_one()
         if not self.invoice_id:
@@ -227,7 +332,6 @@ class inscription(models.Model):
         action_context = action['context']
 
         self.invoice_id.with_context(**action_context).sudo().message_post_with_template(action_context.get('default_template_id'))
-
 
     def button_confirm(self, confirm=False):
         self.ensure_one()
@@ -265,6 +369,9 @@ class inscription(models.Model):
                     return False
                 insc._post_invoice()
             insc.status='confirm'
+
+            # participant_edof
+
             for person in self.participant_edof:
                 person.sudo().write({
                     'exam_date': self.session_id.date,
@@ -273,7 +380,9 @@ class inscription(models.Model):
                     'exam_session_id': self.session_id.id
                 })
 
-            for person in self.participant_hors_cpf:
+            # participant_archive_edof
+
+            for person in self.participant_archive_edof:
                 person.sudo().write({
                     'exam_date': self.session_id.date,
                     'time': self.session_id.time,
@@ -281,9 +390,23 @@ class inscription(models.Model):
                     'exam_session_id': self.session_id.id
                 })
 
+            # participant_hors_cpf
+            old_exam = self.session_id.examen_id
+            if self.session_id and self.session_id.examen_id and self.session_id.examen_id.name == 'TEF':
+                tef_hcpf_product = self.env['product.product'].search([('name', '=', 'TEF HCPF')], limit=1)
+                if tef_hcpf_product:
+                    self.session_id.examen_id = tef_hcpf_product
+            
+            for person in self.participant_hors_cpf:
+                person.sudo().write({
+                    'exam_date': self.session_id.date,
+                    'time': self.session_id.time,
+                    'exam_center_id': self.session_id.exam_center_id.id,
+                    'exam_session_id': self.session_id.id
+                })
+            self.session_id.examen_id = old_exam
             self._validate_inscription()
                 
-
     def button_cancel(self):
         for insc in self:
             insc.status='cancel'
@@ -303,11 +426,85 @@ class inscription(models.Model):
                 action['views'] = form_view
             action['res_id'] = self.invoice_id.id
             return action
-    
+
+    def _compute_invoice_hors_cpf_description(self):
+        self.ensure_one()
+        title = 'TEF HCPF'
+        description = f"Examen: {title if self.session_id.examen_id.name == 'TEF' else self.session_id.examen_id.name}"
+        if len(self.participant_hors_cpf) > 0:
+            description = f"{description} \n   --- Hors CPF ---"
+            for person in self.participant_hors_cpf:
+                repro = " (repregrammé) " if person.status_exam == "exam_to_reshedule" else ''
+                description = f"""{description}
+                {person.last_name} {person.first_name} {person.number} {repro}""" 
+        return description
+
+    def _compute_invoice_edof_fas_pass_description(self, product):
+        self.ensure_one()
+        description = f"{product.name}"
+        logging.info(f"prouct : name =  {product.name}, id = {product.id}")
+        if len(self.participant_edof) > 0:
+            description = f"---- {description} EDOF ----"
+            for person in self.participant_edof:
+                # logging.info(f"participan edof: name = {person.attendee_last_name} {person.attendee_first_name} fass_pass = {person.fass_pass}")
+                if int(person.fass_pass) == int(product.id): 
+                    description = f"""{description}
+                    {person.attendee_last_name} {person.attendee_first_name}"""   
+        return description
+
+    def _compute_invoice_archive_edof_fas_pass_description(self, product):
+        self.ensure_one()
+        description = f"{product.name}" 
+        logging.info(f"prouct : name =  {product.name}, id = {product.id}")
+        if len(self.participant_archive_edof) > 0:
+            description = f"---- {description} Archive EDOF ----"
+            for person in self.participant_archive_edof:
+                # logging.info(f"participan edof: name = {person.attendee_last_name} {person.attendee_first_name} fass_pass = {person.fass_pass}")
+                if int(person.fass_pass) == int(product.id): 
+                    description = f"""{description}
+                    {person.attendee_last_name} {person.attendee_first_name}""" 
+        return description
+
+    def _compute_invoice_hors_cpf_fas_pass_description(self, product):
+        self.ensure_one()
+        description = f"{product.name}"
+        logging.info(f"prouct : name =  {product.name}, id = {product.id}")
+        if len(self.participant_hors_cpf) > 0:
+            description = f"---- {description} HORS CPF ----"
+            for person in self.participant_hors_cpf:
+                if int(person.fass_pass) == int(product.id):
+                    # logging.info(f"participan edof: name = {person.last_name} {person.first_name} fass_pass = {person.fass_pass}")
+                    description = f"""{description}
+                    {person.last_name} {person.first_name}"""   
+        return description
+
+    def _compute_invoice_edof_and_archive_edof_description(self):
+        self.ensure_one()
+
+        description = f"{self.session_id.examen_id.name}"
+
+        if len(self.participant_edof) > 0:
+            description = f"Examen: {description} \n  --- EDOF ---"
+            for person in self.participant_edof:
+                repro = " (reprogrammé) " if person.status_exam == "exam_to_reshedule" else ""
+                description = f"""{description}
+                {person.attendee_last_name} {person.attendee_first_name} {person.folder_number} {repro}"""   
+
+        if len(self.participant_archive_edof) > 0:
+            description = f"{description} \n   --- Archive EDOF ---"
+            for person in self.participant_archive_edof:
+                # repro = " (repregrammé) " if person.status_exam == "exam_to_reshedule" else ''
+                description = f"""{description}
+                {person.attendee_last_name} {person.attendee_first_name} {person.attendee_phone_number}""" 
+
+        return description
 
     def _compute_invoice_description(self):
         self.ensure_one()
-        description = f"{self.session_id.examen_id.name}"
+        
+        title = 'TEF HCPF'
+        description = f"Examen: {title if self.session_id.examen_id.name == 'TEF' else self.session_id.examen_id.name}"
+            
         if len(self.participant_edof) > 0:
             description = f"{description} \n  --- EDOF ---"
             for person in self.participant_edof:
@@ -321,6 +518,13 @@ class inscription(models.Model):
                 repro = " (repregrammé) " if person.status_exam == "exam_to_reshedule" else ''
                 description = f"""{description}
                 {person.last_name} {person.first_name} {person.number} {repro}"""   
+        
+        if len(self.participant_archive_edof) > 0:
+            description = f"{description} \n   --- Archive EDOF ---"
+            for person in self.participant_archive_edof:
+                # repro = " (repregrammé) " if person.status_exam == "exam_to_reshedule" else ''
+                description = f"""{description}
+                {person.attendee_last_name} {person.attendee_first_name} {person.attendee_phone_number}""" 
 
         return description
     

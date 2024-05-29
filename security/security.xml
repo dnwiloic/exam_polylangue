@@ -50,5 +50,9 @@
             <field name="groups" eval="[(4,
             ref('exam_group_manager'))]"/>
         </record>
+        <record id="model_edof_data_archive" model="ir.model">
+            <field name="name">Exam admin edof.data.archive access </field>
+            <field name="model">edof.data.archive</field>
+        </record>
     </data>
 </odoo>
