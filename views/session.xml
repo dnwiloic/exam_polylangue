@@ -61,6 +61,7 @@
                                     <field name="nationality" />
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
+                                    <field name="maternal_langage" />
                                     <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
                                     <field name="fass_pass" />
                                     <field name="status_exam"/>
@@ -91,6 +92,7 @@
                                     <field name="nationality" />
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
+                                    <field name="maternal_langage" />
                                     <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
                                     <field name="fass_pass" />
                                     <field name="status_exam" />
@@ -125,6 +127,7 @@
                                     <field name="nationality" />
                                     <field name="motivation"/>
                                     <field name="n_cni_ts" />
+                                    <field name="maternal_langage" />
                                     <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
                                     <field name="fass_pass" />
                                     <field name="status_exam" />                                    
