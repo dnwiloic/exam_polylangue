@@ -22,10 +22,6 @@ class Session(models.Model):
         string='Responsables',
         domain=lambda self: [('id', 'in', self.env['res.users'].search([('groups_id.name', '=', 'Responsable Agence')]).ids)],
     )
-    participant_archive_edof = fields.Many2many(
-        comodel_name='edof.data.archive',
-        relation='session_edof_data_archive_rel'
-    )
     branch_ids = fields.Many2many(
         comodel_name="res.branch", 
         string="Branches", 
@@ -62,6 +58,7 @@ class Session(models.Model):
     # cand_hcpf = fields.One2many(comodel_name="gestion.formation.dossier", inverse_name='exam_session_id')
     # candidats dont l'incription est valide
     participant_edof = fields.One2many("edof.registration.folder", inverse_name="exam_session_id")
+    participant_archive_edof = fields.One2many(comodel_name='edof.data.archive', inverse_name="exam_session_id")
     
     
     participant_hors_cpf = fields.One2many("gestion.formation.dossier", inverse_name="exam_session_id")
