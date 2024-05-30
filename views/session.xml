@@ -51,8 +51,8 @@
                         
                         <page name="participant_edof_page" string="Participants Edof">
                             <div class="oe_button_box" name="button_box">
-                                <button name="toggle_participant_edof_select_all" string="Tous Sélectionner/Désélectionner" type="object" class="oe_highlight" icon="fa-check-square-o"/>
-                                <button name="action_download_participant_edof_excel" string="Imprimer" type="object" class="oe_highlight" icon="fa-print" style="color:green;"/>   
+                                <button name="toggle_participant_edof_select_all" string="Tous Sélectionner/Désélectionner" type="object" icon="fa-check-square-o" class="oe_highlight" t-attf-class="{{'text-primary'}}"/>
+                                <button name="action_download_participant_edof_excel" string="Imprimer" type="object" icon="fa-print" class="oe_highlight" t-attf-class="{{'text-success'}}"/>   
                             </div>
                             <field name="participant_edof"  options="{'no_create': True, 'no_update': True,}" >
                                 <tree editable="false">
@@ -86,9 +86,14 @@
                             </field>
                         </page>
                         <page name="Participant_hors_CPF_page" string="Participant  hors CPF">
+                            <!-- Les valeurs possibles pour la classe 'oe_button_box' peuvent inclure:
+                                 - 'oe_highlight' pour mettre en évidence le bouton
+                                 - 'oe_link' pour donner l'apparence d'un lien hypertexte
+                                 - 'oe_stat_button' pour un bouton de statistique
+                                 Ces classes sont utilisées pour modifier l'apparence des boutons dans les vues Odoo. -->
                             <div class="oe_button_box" name="button_box">
-                                <button name="toggle_participant_hors_cpf_select_all" string="Tous Sélectionner/Désélectionner" type="object" class="oe_highlight" icon="fa-check-square-o"/>
-                                <button name="action_download_participant_hors_cpf_excel" string="Imprimer" type="object" class="oe_highlight" icon="fa-print" style="color:green;"/>   
+                                <button name="toggle_participant_hors_cpf_select_all" string="Tous Sélectionner/Désélectionner" type="object" icon="fa-check-square-o" class="oe_highlight" t-attf-class="{{'text-primary'}}"/>
+                                <button name="action_download_participant_hors_cpf_excel" string="Imprimer" type="object" icon="fa-print" style="color:green;" class="oe_highlight" t-attf-class="{{'text-success'}}"/>   
                             </div>
                             <field name="participant_hors_cpf" options="{'no_create': True, 'no_update': True,}" >
                                 <tree editable="false">
@@ -124,8 +129,8 @@
                         </page>
                         <page name="edof_data_archive_page" string="Archive EDOF">
                             <div class="oe_button_box" name="button_box">
-                                <button name="toggle_participant_archive_edof_select_all" string="Tous Sélectionner/Désélectionner" type="object" class="oe_highlight" icon="fa-check-square-o"/>
-                                <button name="action_download_participant_archive_edof_excel" string="Imprimer" type="object" class="oe_highlight" icon="fa-print" style="color:green;"/>   
+                                <button name="toggle_participant_archive_edof_select_all" string="Tous Sélectionner/Désélectionner" type="object" icon="fa-check-square-o" class="oe_highlight" t-attf-class="{{'text-primary'}}"/>
+                                <button name="action_download_participant_archive_edof_excel" string="Imprimer" type="object" icon="fa-print" style="color:green;" class="oe_highlight" t-attf-class="{{'text-success'}}"/>   
                             </div>
                             <field 
                                 name="participant_archive_edof"
