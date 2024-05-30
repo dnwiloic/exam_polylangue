@@ -49,9 +49,14 @@
                     </group>
                     <notebook name="participants" string="Participants">
                         
-                       <page name="participant_edof_page" string="Participants Edof">
+                        <page name="participant_edof_page" string="Participants Edof">
+                            <div class="oe_button_box" name="button_box">
+                                <button name="toggle_participant_edof_select_all" string="Tous Sélectionner/Désélectionner" type="object" class="oe_highlight" icon="fa-check-square-o"/>
+                                <button name="action_download_participant_edof_excel" string="Imprimer" type="object" class="oe_highlight" icon="fa-print" style="color:green;"/>   
+                            </div>
                             <field name="participant_edof"  options="{'no_create': True, 'no_update': True,}" >
                                 <tree editable="false">
+                                    <field name="selected"/>
                                     <field name="attendee_email" />
                                     <field name="attendee_last_name" readonly="1" />
                                     <field name="attendee_first_name"  readonly="1" />
@@ -81,8 +86,13 @@
                             </field>
                         </page>
                         <page name="Participant_hors_CPF_page" string="Participant  hors CPF">
+                            <div class="oe_button_box" name="button_box">
+                                <button name="toggle_participant_hors_cpf_select_all" string="Tous Sélectionner/Désélectionner" type="object" class="oe_highlight" icon="fa-check-square-o"/>
+                                <button name="action_download_participant_hors_cpf_excel" string="Imprimer" type="object" class="oe_highlight" icon="fa-print" style="color:green;"/>   
+                            </div>
                             <field name="participant_hors_cpf" options="{'no_create': True, 'no_update': True,}" >
                                 <tree editable="false">
+                                    <field name="selected"/>
                                     <field name="email" />
                                     <field name="last_name" readonly="1" />
                                     <field name="first_name" readonly="1" />
@@ -113,11 +123,16 @@
                             </field>
                         </page>
                         <page name="edof_data_archive_page" string="Archive EDOF">
+                            <div class="oe_button_box" name="button_box">
+                                <button name="toggle_participant_archive_edof_select_all" string="Tous Sélectionner/Désélectionner" type="object" class="oe_highlight" icon="fa-check-square-o"/>
+                                <button name="action_download_participant_archive_edof_excel" string="Imprimer" type="object" class="oe_highlight" icon="fa-print" style="color:green;"/>   
+                            </div>
                             <field 
                                 name="participant_archive_edof"
                                 domain="[('branch_id','in', branch_ids)]" 
                                 options="{'no_create': True, 'no_update': True }" >
                                 <tree editable="false">
+                                    <field name="selected"/>
                                     <field name="attendee_email" string="Email EDOF" />
                                     <field name="attendee_last_name" readonly="1" />
                                     <field name="attendee_first_name" readonly="1"/>

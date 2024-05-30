@@ -65,6 +65,7 @@ class Dossier(models.Model):
         string='FAST PASS',
         store=True,
     )
+    selected = fields.Boolean(string="")
     
     @api.depends("status_exam")
     def _compute_status(self):

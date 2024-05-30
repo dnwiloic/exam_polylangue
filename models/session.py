@@ -1,6 +1,9 @@
+import base64
+import io
+import logging
 from odoo import fields, models, api,_
 from datetime import datetime, timedelta
-
+from odoo.tools.misc import xlsxwriter
 
 class Session(models.Model):
     _name = 'examen.session'
@@ -71,6 +74,177 @@ class Session(models.Model):
         string="Commentaires", 
         store=True
     )
+
+    def toggle_participant_edof_select_all(self):
+        all_selected = all(record.selected for record in self.participant_edof)
+        for record in self.participant_edof:
+            record.selected = not all_selected
+
+    def toggle_participant_hors_cpf_select_all(self):
+        all_selected = all(record.selected for record in self.participant_hors_cpf)
+        for record in self.participant_hors_cpf:
+            record.selected = not all_selected
+
+    def toggle_participant_archive_edof_select_all(self):
+        all_selected = all(record.selected for record in self.participant_archive_edof)
+        for record in self.participant_archive_edof:
+            record.selected = not all_selected
+
+    def action_download_participant_hors_cpf_excel(self):
+        selected_records = self.participant_hors_cpf.filtered(lambda r: r.selected)
+        if not selected_records:
+            return
+
+        # Création du fichier Excel
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        sheet = workbook.add_worksheet()
+
+        # Écrire les en-têtes
+        headers = ['Email', 'Nom', 'Prénom', 'Téléphone', 'Genre', 'Date de naissance', 'Nationalité', 'Motivation', 'N° CNI/TS', 'Langue maternelle', 'Fass Pass', 'Statut de l\'examen', 'Commentaires']
+        for col, header in enumerate(headers):
+            sheet.write(0, col, header)
+
+        # Écrire les données
+        for row, record in enumerate(selected_records, start=1):
+            sheet.write(row, 0, record.email if record.email else '')
+            sheet.write(row, 1, record.last_name if record.last_name else '')
+            sheet.write(row, 2, record.first_name if record.first_name else '')
+            sheet.write(row, 3, record.phone if record.phone else '')
+            sheet.write(row, 4, record.gender if record.gender else '')
+            sheet.write(row, 5, record.birth_day if record.birth_day else '')
+            sheet.write(row, 6, record.nationality.name if record.nationality.name else '')
+            sheet.write(row, 7, record.motivation if record.motivation else '')
+            sheet.write(row, 8, record.n_cni_ts if record.n_cni_ts else '')
+            sheet.write(row, 9, record.maternal_langage if record.maternal_langage else '')
+            sheet.write(row, 10, record.fass_pass if record.fass_pass else '')
+            sheet.write(row, 11, record.status_exam if record.status_exam else '')
+            sheet.write(row, 12, record.comments if record.comments else '')
+
+        workbook.close()
+        output.seek(0)
+        file_data = output.read()
+        output.close()
+
+        # Créer un attachement pour le fichier Excel
+        attachment = self.env['ir.attachment'].create({
+            'name': 'Participants_Hors_CPF.xlsx',
+            'type': 'binary',
+            'datas': base64.b64encode(file_data),
+            'store_fname': 'Participants_Hors_CPF.xlsx',
+            'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        })
+
+        # Retourner l'action pour télécharger le fichier
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/%s?download=true' % attachment.id,
+            'target': 'new',
+        }
+
+    def action_download_participant_archive_edof_excel(self):
+        selected_records = self.participant_edof.filtered(lambda r: r.selected)
+        if not selected_records:
+            return
+
+        # Création du fichier Excel
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        sheet = workbook.add_worksheet()
+
+        # Écrire les en-têtes
+        headers = ['Email', 'Nom', 'Prénom', 'Téléphone', 'Genre', 'Date de naissance', 'Nationalité', 'Motivation', 'N° CNI/TS', 'Langue maternelle', 'Fass Pass', 'Statut de l\'examen', 'Commentaires']
+        for col, header in enumerate(headers):
+            sheet.write(0, col, header)
+
+        # Écrire les données
+        for row, record in enumerate(selected_records, start=1):
+            sheet.write(row, 0, record.attendee_email if record.attendee_email else '')
+            sheet.write(row, 1, record.attendee_last_name if record.attendee_last_name else '')
+            sheet.write(row, 2, record.attendee_first_name if record.attendee_first_name else '')
+            sheet.write(row, 3, record.attendee_phone_number if record.attendee_phone_number else '')
+            sheet.write(row, 4, record.gender if record.gender else '')
+            sheet.write(row, 5, record.birth_day if record.birth_day else '')
+            sheet.write(row, 6, record.nationality.name if record.nationality.name else '')
+            sheet.write(row, 7, record.motivation if record.motivation else '')
+            sheet.write(row, 8, record.n_cni_ts if record.n_cni_ts else '')
+            sheet.write(row, 9, record.maternal_langage if record.maternal_langage else '')
+            sheet.write(row, 10, record.fass_pass if record.fass_pass else '')
+            sheet.write(row, 11, record.status_exam if record.status_exam else '')
+            sheet.write(row, 12, record.comments if record.comments else '')
+
+        workbook.close()
+        output.seek(0)
+        file_data = output.read()
+        output.close()
+
+        # Créer un attachement pour le fichier Excel
+        attachment = self.env['ir.attachment'].create({
+            'name': 'Participants_Archive_EDOF.xlsx',
+            'type': 'binary',
+            'datas': base64.b64encode(file_data),
+            'store_fname': 'Participants_Archive_EDOF.xlsx',
+            'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        })
+
+        # Retourner l'action pour télécharger le fichier
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/%s?download=true' % attachment.id,
+            'target': 'new',
+        }
+
+    def action_download_participant_edof_excel(self):
+        selected_records = self.participant_edof.filtered(lambda r: r.selected)
+        if not selected_records:
+            return
+
+        # Création du fichier Excel
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        sheet = workbook.add_worksheet()
+
+        # Écrire les en-têtes
+        headers = ['Email', 'Nom', 'Prénom', 'Téléphone', 'Genre', 'Date de naissance', 'Nationalité', 'Motivation', 'N° CNI/TS', 'Langue maternelle', 'Fass Pass', 'Statut de l\'examen', 'Commentaires']
+        for col, header in enumerate(headers):
+            sheet.write(0, col, header)
+
+        # Écrire les données
+        for row, record in enumerate(selected_records, start=1):
+            sheet.write(row, 0, record.attendee_email if record.attendee_email else '')
+            sheet.write(row, 1, record.attendee_last_name if record.attendee_last_name else '')
+            sheet.write(row, 2, record.attendee_first_name if record.attendee_first_name else '')
+            sheet.write(row, 3, record.attendee_phone_number if record.attendee_phone_number else '')
+            sheet.write(row, 4, record.gender if record.gender else '')
+            sheet.write(row, 5, record.birth_day if record.birth_day else '')
+            sheet.write(row, 6, record.nationality.name if record.nationality.name else '')
+            sheet.write(row, 7, record.motivation if record.motivation else '')
+            sheet.write(row, 8, record.n_cni_ts if record.n_cni_ts else '')
+            sheet.write(row, 9, record.maternal_langage if record.maternal_langage else '')
+            sheet.write(row, 10, record.fass_pass if record.fass_pass else '')
+            sheet.write(row, 11, record.status_exam if record.status_exam else '')
+            sheet.write(row, 12, record.comments if record.comments else '')
+
+        workbook.close()
+        output.seek(0)
+        file_data = output.read()
+        output.close()
+
+        # Créer un attachement pour le fichier Excel
+        attachment = self.env['ir.attachment'].create({
+            'name': 'Participants_EDOF.xlsx',
+            'type': 'binary',
+            'datas': base64.b64encode(file_data),
+            'store_fname': 'Participants_EDOF.xlsx',
+            'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        })
+
+        # Retourner l'action pour télécharger le fichier
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/%s?download=true' % attachment.id,
+            'target': 'new',
+        }
 
     @api.model_create_multi
     def create(self, vals_list):
