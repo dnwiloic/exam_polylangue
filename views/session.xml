@@ -14,8 +14,15 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button name="toggle_participant_select_all" string="Tous Sélectionner/Désélectionner" type="object" icon="fa-check-square-o" class="oe_highlight" t-attf-class="{{'text-primary'}}"/>
-                        <button name="action_download_participants_excel" string="Imprimer" type="object" icon="fa-print" class="oe_highlight" t-attf-class="{{'text-success'}}"/>   
+                        <button name="toggle_participant_select_all" string="Tous Sélectionner/Désélectionner" type="object" icon="fa-check-square-o" class="oe_highlight">
+                            <field name="participant_count3" widget="statinfo" string="Tous Sélectionner/Désélectionner"/>
+                        </button>
+                        <button name="action_download_participants_csv" string="Export CSV" type="object" class="oe_highlight" icon="fa-print" t-attf-class="{{'text-primary'}}">
+                            <field name="participant_count2" widget="statinfo" string="Export CSV"/>
+                        </button>     
+                        <button name="action_download_participants_excel"  type="object" icon="fa-file-excel-o" class="oe_highlight" t-attf-class="{{'text-success'}}">
+                            <field name="participant_count1" widget="statinfo" string="Export Excel"/>
+                        </button>   
                         <button name="action_view_invoices"
                             type="object"
                             class="oe_stat_button"

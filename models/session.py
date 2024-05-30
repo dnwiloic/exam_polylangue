@@ -1,9 +1,12 @@
-import base64
 import io
+import csv
+import base64
 import logging
 from odoo import fields, models, api,_
-from datetime import datetime, timedelta
+import datetime
+from datetime import timedelta
 from odoo.tools.misc import xlsxwriter
+from io import StringIO
 
 class Session(models.Model):
     _name = 'examen.session'
@@ -74,6 +77,9 @@ class Session(models.Model):
         string="Commentaires", 
         store=True
     )
+    participant_count1 = fields.Integer(string='Participant Count', readonly=True, default=0, compute='_compute_participant_count')
+    participant_count2 = fields.Integer(string='Participant Count', readonly=True, default=0, compute='_compute_participant_count')
+    participant_count3 = fields.Integer(string='Participant Count', readonly=True, default=0, compute='_compute_participant_count')
     
     def toggle_participant_select_all(self):
         # edof
@@ -90,6 +96,80 @@ class Session(models.Model):
         all_selected = all(record.selected for record in self.participant_archive_edof)
         for record in self.participant_archive_edof:
             record.selected = not all_selected
+
+    def action_download_participants_csv(self):
+        if not self.participant_hors_cpf and not self.participant_edof and not self.participant_archive_edof:
+            return
+        headers = ['Email', 'Nom', 'Prénom', 'Téléphone', 'Genre', 'Date de naissance', 'Nationalité', 'Motivation', 'N° CNI/TS', 'Langue maternelle', 'Fass Pass', 'Statut de l\'examen', 'Commentaires']
+        output = StringIO()
+        writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
+        writer.writerow(headers)
+
+        # edof and archive_edof
+
+        selected_records1 = self.participant_edof.filtered(lambda r: r.selected)
+        selected_records2 = self.participant_archive_edof.filtered(lambda r: r.selected)
+
+        for records in [selected_records1, selected_records2]:
+            for record in records:
+                writer.writerow([
+                    record.attendee_email,
+                    record.attendee_last_name,
+                    record.attendee_first_name,
+                    record.attendee_phone_number,
+                    record.gender,
+                    record.birth_day,
+                    record.nationality.name if record.nationality else '',
+                    record.motivation,
+                    record.n_cni_ts,
+                    record.maternal_langage,
+                    record.fass_pass,
+                    record.status_exam,
+                    record.comments
+                ])
+        # hors cpf
+        selected_records3 = self.participant_hors_cpf.filtered(lambda r: r.selected)
+        for records in selected_records3:
+            for record in records:
+                writer.writerow([
+                    record.email,
+                    record.last_name,
+                    record.first_name,
+                    record.phone,
+                    record.gender,
+                    record.birth_day,
+                    record.nationality.name if record.nationality else '',
+                    record.motivation,
+                    record.n_cni_ts,
+                    record.maternal_langage,
+                    record.fass_pass,
+                    record.status_exam,
+                    record.comments
+                ])
+        output.seek(0)
+        result = base64.b64encode(output.getvalue().encode()).decode()
+        output.close()
+
+        # Créer un attachement pour le fichier Excel avec la date actuelle dans le nom
+        
+        date_today = datetime.date.today().strftime('%Y-%m-%d')
+        file_name = 'Participants_EDOF_ARCHIVE-EDOF_HORS-CPF_{}.csv'.format(date_today)
+
+        attachment = self.env['ir.attachment'].create({
+            'name': file_name,
+            'type': 'binary',
+            'datas': result,
+            'store_fname': file_name,
+            'mimetype': 'text/csv'
+        })
+
+        # Retourner l'action pour télécharger le fichier
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/%s?download=true' % attachment.id,
+            'target': 'new',
+        }
+        
 
     def action_download_participants_excel(self):
         
@@ -169,11 +249,15 @@ class Session(models.Model):
         output.close()
 
         # Créer un attachement pour le fichier Excel
+
+        date_today = datetime.date.today().strftime('%Y-%m-%d')
+        file_name = 'Participants_EDOF_ARCHIVE-EDOF_HORS-CPF_{}.xlsx'.format(date_today)
+
         attachment = self.env['ir.attachment'].create({
-            'name': 'Participants_EDOF_ARCHIVE-EDOF_HORS-CPF.xlsx',
+            'name': file_name,
             'type': 'binary',
             'datas': base64.b64encode(file_data),
-            'store_fname': 'Participants_EDOF_ARCHIVE-EDOF_HORS-CPF.xlsx',
+            'store_fname': file_name,
             'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         })
 
@@ -192,6 +276,13 @@ class Session(models.Model):
         
         return super(Session, self).create(vals_list)
     
+    @api.depends('participant_hors_cpf', 'participant_edof', 'participant_archive_edof')
+    def _compute_participant_count(self):
+        for record in self:
+            record.participant_count1 = len(record.participant_hors_cpf.filtered(lambda r: r.selected)) + len(record.participant_edof.filtered(lambda r: r.selected)) + len(record.participant_archive_edof.filtered(lambda r: r.selected))
+            record.participant_count2 = len(record.participant_hors_cpf.filtered(lambda r: r.selected)) + len(record.participant_edof.filtered(lambda r: r.selected)) + len(record.participant_archive_edof.filtered(lambda r: r.selected))
+            record.participant_count3 = len(record.participant_hors_cpf.filtered(lambda r: r.selected)) + len(record.participant_edof.filtered(lambda r: r.selected)) + len(record.participant_archive_edof.filtered(lambda r: r.selected))
+
     @api.depends('invoice_ids')
     def _compute_invoice_count(self):
         for record in self:
