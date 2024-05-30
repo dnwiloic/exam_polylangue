@@ -47,9 +47,9 @@ class inscription(models.Model):
         self.ensure_one()
         return len(self.participant_edof) + len(self.participant_hors_cpf) + len(self.participant_archive_edof)
 
-    def _compute_nbr_edof_and_archive_edof_insciption(self):
+    def _compute_nbr_edof_and_archive_edof_insciption(self, participant_edof, participant_archive_edof):
         self.ensure_one()
-        return len(self.participant_edof) + len(self.participant_archive_edof)
+        return len(participant_edof) + len(participant_archive_edof)
     
     def _compute_nbr_hors_cpf_insciption(self):
         self.ensure_one()
@@ -185,10 +185,10 @@ class inscription(models.Model):
         self.ensure_one()
         return len( [x for x in self.participant_hors_cpf if x.status_exam == "exam_to_reshedule"] )
 
-    def _get_nbr_edof_and_rchive_edof_already_paid(self):
+    def _get_nbr_edof_and_rchive_edof_already_paid(self, participant_edof):
         """Return the nomber of inscription already paid"""
         self.ensure_one()
-        return len( [x for x in self.participant_edof if x.status_exam == "exam_to_reshedule"] ) 
+        return len( [x for x in participant_edof if x.status_exam == "exam_to_reshedule"] ) 
         # \
         #         + len(self.participant_archive_edof)
     def write_edof_penality(self):
@@ -248,7 +248,42 @@ class inscription(models.Model):
                     'name': self._compute_invoice_hors_cpf_fas_pass_description(participant_penality),
                     'quantity': count, 
                 })
+                
+    def write_edof_and_archive_edof_lines(self):
+        # Produit par défaut pour les participants EDOF et Archive EDOF
+        default_product_id = self.session_id.examen_id.id
 
+        # Produit particulier pour les participants dont la branche contient "Francisco"
+        special_product = self.env['product.product'].search([('name', '=', 'TEF FO')], limit=1)
+        special_product_id = special_product.id if special_product else default_product_id
+
+        # Séparation des participants EDOF selon la condition
+        edof_special = [p for p in self.participant_edof if 'FRANSIZCA OGRENIYORUM' in p.branch_id.name]
+        edof_default = [p for p in self.participant_edof if 'FRANSIZCA OGRENIYORUM' not in p.branch_id.name]
+
+        # Séparation des participants Archive EDOF selon la condition
+        archive_edof_special = [p for p in self.participant_archive_edof if 'FRANSIZCA OGRENIYORUM' in p.branch_id.name]
+        archive_edof_default = [p for p in self.participant_archive_edof if 'FRANSIZCA OGRENIYORUM' not in p.branch_id.name]
+
+
+        # Créer les lignes de facture pour les participants qui remplissent la condition 'FRANSIZCA OGRENIYORUM'
+        if len(edof_special) > 0 or len(archive_edof_special) > 0:
+            self.env['account.move.line'].sudo().create({
+                'move_id': self.invoice_id.id,
+                'product_id': special_product_id,
+                'name': self._compute_invoice_edof_and_archive_edof_description(edof_special, archive_edof_special, special_product),
+                'quantity': self._compute_nbr_edof_and_archive_edof_insciption(edof_special, archive_edof_special) - self._get_nbr_edof_and_rchive_edof_already_paid(edof_special),  # Ajustez la quantité selon vos besoins
+            })
+
+        # Créer les lignes de facture pour les participants qui ne remplissent pas la condition 'FRANSIZCA OGRENIYORUM'
+        if len(edof_default) > 0 or len(archive_edof_default) > 0:
+            self.env['account.move.line'].sudo().create({
+                'move_id': self.invoice_id.id,
+                'product_id': default_product_id,
+                'name': self._compute_invoice_edof_and_archive_edof_description(edof_default, archive_edof_default, self.session_id.examen_id),
+                'quantity': self._compute_nbr_edof_and_archive_edof_insciption(edof_default, archive_edof_default) - self._get_nbr_edof_and_rchive_edof_already_paid(edof_default),  # Ajustez la quantité selon vos besoins
+            })
+        
     def _compute_invoice(self):
         self.ensure_one()
         if not self.invoice_id:
@@ -282,17 +317,11 @@ class inscription(models.Model):
         # create new product line for exam price   #################################
 
         # cas du TEF
-        if self.session_id.examen_id.name == 'TEF':
+        if self.session_id.examen_id.name == 'TEF' or self.session_id.examen_id.name == 'TEF IRN':
 
             # ========================  ecriture comptable: Examen EDOF & Archive EDOF   ===================================
 
-            self.env['account.move.line'].sudo().create({
-                'move_id': self.invoice_id.id,
-                'product_id': self.session_id.examen_id.id,
-                'name': self._compute_invoice_edof_and_archive_edof_description(),
-                'quantity': self._compute_nbr_edof_and_archive_edof_insciption() - self._get_nbr_edof_and_rchive_edof_already_paid(), 
-                }
-            )
+            self.write_edof_and_archive_edof_lines() # ecriture comptable: Examen EDOF & Archive EDOF 
             self.write_edof_penality()          # ecriture comptable: Penalite EDOF 
             self.write_archive_edof_penality()  # ecriture comptable: Penalite ARCHIVE  EDOF
             
@@ -478,21 +507,21 @@ class inscription(models.Model):
                     {person.last_name} {person.first_name}"""   
         return description
 
-    def _compute_invoice_edof_and_archive_edof_description(self):
+    def _compute_invoice_edof_and_archive_edof_description(self, participant_edof, participant_archive_edof, product):
         self.ensure_one()
 
-        description = f"{self.session_id.examen_id.name}"
+        description = f"{product.name}"
 
-        if len(self.participant_edof) > 0:
+        if len(participant_edof) > 0:
             description = f"Examen: {description} \n  --- EDOF ---"
-            for person in self.participant_edof:
+            for person in participant_edof:
                 repro = " (reprogrammé) " if person.status_exam == "exam_to_reshedule" else ""
                 description = f"""{description}
                 {person.attendee_last_name} {person.attendee_first_name} {person.folder_number} {repro}"""   
 
-        if len(self.participant_archive_edof) > 0:
+        if len(participant_archive_edof) > 0:
             description = f"{description} \n   --- Archive EDOF ---"
-            for person in self.participant_archive_edof:
+            for person in participant_archive_edof:
                 # repro = " (repregrammé) " if person.status_exam == "exam_to_reshedule" else ''
                 description = f"""{description}
                 {person.attendee_last_name} {person.attendee_first_name} {person.attendee_phone_number}""" 
