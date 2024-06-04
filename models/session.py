@@ -4,6 +4,7 @@ import base64
 import logging
 from odoo import fields, models, api,_
 import datetime
+from datetime import datetime
 from datetime import timedelta
 from odoo.tools.misc import xlsxwriter
 from io import StringIO
