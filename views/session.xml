@@ -157,12 +157,16 @@
                                 </tree>
                             </field>
                         </page>
-                        <page name="responsable_ids_page" string="Responsables">
+                        <page name="responsable_ids_page" string="Équipe de Responsables">
                             <field 
                                 name="responsable_ids"
                                 options="{'no_create': True, 'no_update': True }" >
                                 <tree editable="top,bottom">
-                                    <field name="partner_id" />
+                                    <field name="partner_id" string="Nom" readonly="1"/>
+                                    <field name="login" readonly="1"/>
+                                    <field name="login_date" readonly="1"/>
+                                    <field name="company_id" readonly="1"/>
+                                    <field name="state" widget="badge" decoration-info="state == 'new'" decoration-success="state == 'active'" readonly="1"/>
                                 </tree>
                             </field>
                         </page>
@@ -190,6 +194,7 @@
             <tree>
                 <field name="name" /> 
                 <field name="responsable_id" />
+                <field name="responsable_ids" widget="many2many_tags" />
                 <field name="date" />
                 <field name="status" />
                 <field name="nbr_cand" />

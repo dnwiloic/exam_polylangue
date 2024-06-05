@@ -26,7 +26,8 @@ class Session(models.Model):
     responsable_ids = fields.Many2many(
         comodel_name="res.users", 
         relation='responsable_ids_rel',
-        string='Responsables',
+        string='Équipe de Responsables',
+        tracking=True,
         domain=lambda self: [('id', 'in', self.env['res.users'].search([('groups_id.name', '=', 'Responsable Agence')]).ids)],
     )
     branch_ids = fields.Many2many(
@@ -48,7 +49,7 @@ class Session(models.Model):
                               default= lambda self: self.env['ir.config_parameter'].sudo().get_param("exam_polylangue.default_max_cand"),
                               required=True)
 
-    responsable_id = fields.Many2one(comodel_name="res.users",string="Responsable", required=True,
+    responsable_id = fields.Many2one(comodel_name="res.users",string="Responsable Principal", required=True,
                                      domain= lambda self: f"[('id', 'in', {self.get_responsable_list()})]")
     
     exam_center_id = fields.Many2one(comodel_name="res.branch", string="Lieu de l'examen", required=True)
@@ -64,8 +65,8 @@ class Session(models.Model):
     # cand_edof = fields.One2many(comodel_name="edof.registration.folder", inverse_name='exam_session_id')
     # cand_hcpf = fields.One2many(comodel_name="gestion.formation.dossier", inverse_name='exam_session_id')
     # candidats dont l'incription est valide
-    participant_edof = fields.One2many("edof.registration.folder", inverse_name="exam_session_id")
-    participant_archive_edof = fields.One2many(comodel_name='edof.data.archive', inverse_name="exam_session_id")
+    participant_edof = fields.One2many("edof.registration.folder", inverse_name="exam_session_id", tracking=True,)
+    participant_archive_edof = fields.One2many(comodel_name='edof.data.archive', inverse_name="exam_session_id", tracking=True,)
     
     
     participant_hors_cpf = fields.One2many("gestion.formation.dossier", inverse_name="exam_session_id")
@@ -73,7 +74,7 @@ class Session(models.Model):
 
     invoice_ids = fields.One2many('account.move','session_id','Factures')
     invoice_count = fields.Integer(
-        string='Invoice Count', readonly=True, default=0, compute='_compute_invoice_count')
+        string='Invoice Count', readonly=True, default=0, compute='_compute_invoice_count', tracking=True,)
     comments = fields.Text(
         string="Commentaires", 
         store=True
