@@ -19,7 +19,7 @@
             <field name="name">Exam inscription user access</field>
             <field name="model_id" ref="model_examen_inscription"/>
             <field name="domain_force">
-                [('responsable_id', '=', user.id)]
+                ['|', ('responsable_id', '=', user.id), ('session_id.responsable_ids', 'in', [user.id])]
             </field>
             <field name="groups" eval="[(4,
             ref('exam_group_user'))]"/>
