@@ -288,19 +288,21 @@ class inscription(models.Model):
         self.ensure_one()
         if not self.invoice_id:
             invoice_data = {
-                'partner_id': self.responsable_id.branch_id.company_id.partner_id.id, 
-                'branch_id': self.responsable_id.branch_id.id,
+                'partner_id': self.sudo().responsable_id.branch_id.company_id.partner_id.id, 
+                'branch_id': self.sudo().responsable_id.branch_id.id,
                 'move_type': 'out_invoice',
                 'invoice_date':fields.Date.today(),
                 'session_id': self.session_id.id,
-                'journal_id': self._get_default_journal().id
+                'journal_id': self._get_default_journal().id,
+                'company_id': self._get_invoiced_company().id,
+                'currency_id': self._get_invoiced_company().currency_id.id,
             }
             try :
                 self.invoice_id = self.env['account.move'].sudo().create(invoice_data)
             except Exception as e:
                 simalars_partner = self.env['res.partner'].sudo().search([
-                    ('name','=',self.responsable_id.branch_id.company_id.partner_id.name),
-                    ('id','!=',self.responsable_id.branch_id.company_id.partner_id.id),
+                    ('name','=',self.sudo().responsable_id.branch_id.company_id.partner_id.name),
+                    ('id','!=',self.sudo().responsable_id.branch_id.company_id.partner_id.id),
                     ('is_company','=',True)])
                 for partner in simalars_partner:
                     invoice_data['partner_id'] = partner.id
