@@ -14,6 +14,15 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
+                        <button name="toggle_participant_select_all" string="Tous Sélectionner/Désélectionner" type="object" icon="fa-check-square-o" class="oe_highlight">
+                            <field name="participant_count3" widget="statinfo" string="Tous Sélectionner/Désélectionner"/>
+                        </button>
+                        <button name="action_download_participants_csv" string="Export CSV" type="object" class="oe_highlight" icon="fa-print" t-attf-class="{{'text-primary'}}">
+                            <field name="participant_count2" widget="statinfo" string="Export CSV"/>
+                        </button>     
+                        <button name="action_download_participants_excel"  type="object" icon="fa-file-excel-o" class="oe_highlight" t-attf-class="{{'text-success'}}">
+                            <field name="participant_count1" widget="statinfo" string="Export Excel"/>
+                        </button>   
                         <button name="action_view_invoices"
                             type="object"
                             class="oe_stat_button"
@@ -33,11 +42,12 @@
                     </div>
                     <group >
                         <group>
+                            <field name="branch_ids" invisible="1"/>
                             <field name="inscription_ids" invisible="1"/>
                             <field name="date" attrs="{'readonly': [('name', '!=', False)]}"/>
                             <field name="time" widget="float_time" attrs="{'readonly': [('inscription_ids', '!=', [])]}" />
                             <field name="examen_id" domain="[('is_exam','=', True), ('is_pass','=', False)]" />
-                            <field name="responsable_id" attrs="{'readonly': [('inscription_ids', '!=', [])]}" />
+                            <field name="responsable_id" attrs="{'readonly': [('inscription_ids', '!=', [])], 'on_change': '_update_participant_archive_edof'}" />
                         </group>
                         <group>
                             <field name="min_cand" attrs="{'readonly': [('inscription_ids', '!=', [])]}"/>
@@ -50,22 +60,22 @@
                         
                         <page name="participant_edof_page" string="Participants Edof">
                             <field name="participant_edof"  options="{'no_create': True, 'no_update': True,}" >
-                                <tree >
-                                    <!-- <control>
-                                        <create name="add_line_control" string="Ajouter une session" />
-                                    </control> -->
-                                    <field name="attendee_last_name" />
-                                    <field name="attendee_first_name"  />
+                                <tree editable="false">
+                                    <field name="selected"/>
                                     <field name="attendee_email" />
+                                    <field name="attendee_last_name" readonly="1" />
+                                    <field name="attendee_first_name"  readonly="1" />
                                     <field name="attendee_phone_number" />
                                     <field name="gender" />
                                     <field name="birth_day" />
                                     <field name="nationality" />
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
-                                    <field name="insciption_file"  />
+                                    <field name="maternal_langage" />
+                                    <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
+                                    <field name="fass_pass" />
                                     <field name="status_exam"/>
-                                    <field name="folder_number"  />
+                                    <field name="comments"/>
                                     <button name="validate_exam" string="Valider" type="object"
                                             groups="exam_polylangue.exam_group_manager"
                                             attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
@@ -82,19 +92,23 @@
                         </page>
                         <page name="Participant_hors_CPF_page" string="Participant  hors CPF">
                             <field name="participant_hors_cpf" options="{'no_create': True, 'no_update': True,}" >
-                                <tree >
+                                <tree editable="false">
+                                    <field name="selected"/>
+                                    <field name="email" />
                                     <field name="last_name" readonly="1" />
                                     <field name="first_name" readonly="1" />
-                                    <field name="email" />
                                     <field name="phone" />
                                     <field name="gender" />
                                     <field name="birth_day" />
                                     <field name="nationality" />
                                     <field name="motivation" />
                                     <field name="n_cni_ts" />
-                                    <field name="insciption_file"  />
+                                    <field name="maternal_langage" />
+                                    <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
+                                    <field name="fass_pass" />
                                     <field name="status_exam" />
-                                    <field name="number"  />
+                                    <field name="comments"/>
+                                    <!-- <field name="number"  /> -->
                                     <button name="validate_exam" string="Valider"  type="object"
                                             groups="exam_polylangue.exam_group_manager"
                                             attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
@@ -109,6 +123,57 @@
                             
                             </field>
                         </page>
+                        <page name="edof_data_archive_page" string="Archive EDOF">
+                            <field 
+                                name="participant_archive_edof"
+                                domain="[('branch_id','in', branch_ids)]" 
+                                options="{'no_create': True, 'no_update': True }" >
+                                <tree editable="false">
+                                    <field name="selected"/>
+                                    <field name="attendee_email" string="Email EDOF" />
+                                    <field name="attendee_last_name" readonly="1" />
+                                    <field name="attendee_first_name" readonly="1"/>
+                                    <field name="attendee_phone_number" />
+                                    <field name="gender" />
+                                    <field name="birth_day" />
+                                    <field name="nationality" />
+                                    <field name="motivation"/>
+                                    <field name="n_cni_ts" />
+                                    <field name="maternal_langage" />
+                                    <field name="insciption_file" widget="binary" filename="insciption_file_name" options="{'download': True}" />
+                                    <field name="fass_pass" />
+                                    <field name="status_exam" />                                    
+                                    <field name="comments"/>
+                                    <button name="validate_exam" string="Valider"  type="object"
+                                            groups="exam_polylangue.exam_group_manager"
+                                            attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
+                                    <button name="cancel_exam" string="Rejeter"  type="object"
+                                            groups="exam_polylangue.exam_group_manager"
+                                            attrs="{'invisible': [('status_exam','!=','register_paid')]}" />
+                                    <button name="send_exam_convocation" string="Convoquer" type="object"
+                                            groups="exam_polylangue.exam_group_manager"
+                                            attrs="{'invisible': [('status_exam','!=','exam_sheduled')]}" 
+                                            help=" ${nbr_convocations} envoyé(s)"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page name="responsable_ids_page" string="Équipe de Responsables">
+                            <field 
+                                name="responsable_ids"
+                                options="{'no_create': True, 'no_update': True }" >
+                                <tree editable="top,bottom">
+                                    <field name="partner_id" string="Nom" readonly="1"/>
+                                    <field name="login" readonly="1"/>
+                                    <field name="login_date" readonly="1"/>
+                                    <field name="company_id" readonly="1"/>
+                                    <field name="state" widget="badge" decoration-info="state == 'new'" decoration-success="state == 'active'" readonly="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page name="comments_page" string="Commentaires">
+                            <field name="comments" placeholder="Vous pouvez désormais laissez un commentaire sur cette session ici."/>
+                        </page>
+                       
                     </notebook>
                 </sheet>
 
@@ -129,6 +194,7 @@
             <tree>
                 <field name="name" /> 
                 <field name="responsable_id" />
+                <field name="responsable_ids" widget="many2many_tags" />
                 <field name="date" />
                 <field name="status" />
                 <field name="nbr_cand" />
