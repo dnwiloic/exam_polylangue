@@ -42,12 +42,12 @@ class RegistrationFolder(models.Model):
     
 
     exam_session_id = fields.Many2one('examen.session', store=True, readonly=True)
-    gender = fields.Selection(GENDER, string='genre' , )
-    birth_day = fields.Date(string='date de naissance' , )
+    gender = fields.Selection(GENDER, string='Genre' , )
+    birth_day = fields.Date(string='Date de naissance' , )
     nationality = fields.Many2one('res.country','Pays de nationalité', )
     motivation = fields.Selection(learner_utils.MOTIVATIONS_LIST)
     n_cni_ts = fields.Char('N° de CNI/TS',)
-    maternal_langage = fields.Char("langue maternelle")
+    maternal_langage = fields.Char("Langue maternelle")
     insciption_file = fields.Binary(
         string='Fichier',
     )
@@ -59,6 +59,14 @@ class RegistrationFolder(models.Model):
     inscriptions = fields.Many2many("examen.inscription", relation='inscription_participant_hors_cpf_rel')
     last_annulation_day = fields.Date("Delay d'annulation se l'inscription", store=True, compute="_compute_last_annulation_day")
     nbr_covocation = fields.Integer("Nombres de convocations envoyés", default=0)
+    comments = fields.Text(string="Commentaires", store=True)
+    fass_pass = fields.Selection(
+        selection=lambda self: [(str(p.id), p.name) for p in self.env['product.product'].search([('is_pass', '=', True)])],
+        string='FAST PASS',
+        store=True,
+    )
+    selected = fields.Boolean(string="")
+    
 
     
     @api.depends("status_exam")

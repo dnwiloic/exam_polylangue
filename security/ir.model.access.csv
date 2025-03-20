@@ -4,4 +4,4 @@ access_user_examen_session,ExamSessionUserAccess,model_examen_session,exam_group
 access_user_examen_inscription,ExamInscriptionUserAccess,model_examen_inscription,exam_group_user,1,1,1,1
 access_admin_examen_inscription,ExamInscriptionnManager,model_examen_inscription,exam_group_manager,1,1,1,1
 access_admin_examen_company,ExamInscriptionnManagerResCompany,polyx_franchise.model_res_company,exam_group_manager,1,0,0,0
-
+access_admin_data_archive_edof,DataArchiveEdofManager,model_edof_data_archive,exam_group_manager,1,1,1,1
